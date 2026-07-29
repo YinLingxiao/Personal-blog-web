@@ -1,0 +1,9 @@
+{
+  "name": "moqian-local-workspace",
+  "private": true,
+  "scripts": {
+    "quality:blog": "npm --prefix Blog run quality",
+    "quality:note": "npm --prefix Note run quality",
+    "quality:content-sites": "npm run quality:blog && npm run quality:note"
+  }
+}

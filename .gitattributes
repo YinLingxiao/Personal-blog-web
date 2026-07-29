@@ -1,0 +1,9 @@
+* text=auto eol=lf
+
+*.bat text eol=crlf
+*.cmd text eol=crlf
+
+Home/assets/** -whitespace
+Home/fonts/OFL-LXGW-WenKai.txt -whitespace
+New/app/public/fonts/OFL-LXGW-WenKai.txt -whitespace
+New/app/src/components/AsciiMoon.tsx -whitespace

@@ -1,0 +1,38 @@
+.env
+.env.*
+!.env.example
+
+node_modules/
+venv/
+__pycache__/
+*.pyc
+.vite/
+*.tsbuildinfo
+
+# Local machine state
+.agents/
+.claude/
+tmp/
+
+# Private authoring area
+Opus/notes/*
+!Opus/notes/.gitkeep
+
+# Keep repository READMEs only; all other Markdown stays local
+*.md
+!README.md
+!**/README.md
+
+New/app/dist/
+Blog/dist/
+Blog/src/generated/
+Blog/public/posts/
+Blog/public/latest.json
+Note/dist/
+Note/src/generated/
+Note/public/posts/
+video-downloader/
+
+*.log
+*.rar
+*.zip
