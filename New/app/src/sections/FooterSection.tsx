@@ -2,6 +2,7 @@ import MotionControls from '@/components/motion/MotionControls';
 import React from 'react';
 import BrandSignature from '@/components/BrandSignature';
 import BrandMark from '@/components/brand/BrandMark';
+import ContactCard from '@/components/ContactCard';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const FooterSection: React.FC = () => {
@@ -52,27 +53,7 @@ const FooterSection: React.FC = () => {
             </p>
           </div>
 
-          {/* Social links */}
-          <div className="flex items-center gap-8">
-            {[
-              { label: 'github', href: 'https://github.com/YinLingxiao' },
-              { label: 'bilibili', href: 'https://space.bilibili.com/495914527' },
-            ].map((link) => (
-              <a
-                key={link.label}
-                href={link.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-1 text-[0.75rem] tracking-[0.05em] transition-colors hover:text-[var(--fg)]"
-                style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
-              >
-                {link.label}
-                <span className="inline-block transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-0.5">
-                  ↗
-                </span>
-              </a>
-            ))}
-          </div>
+          <ContactCard />
         </div>
 
         <div className="text-center mt-10"><MotionControls /></div>
