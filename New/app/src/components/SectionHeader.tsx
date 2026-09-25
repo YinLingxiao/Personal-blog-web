@@ -19,7 +19,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ number, title, subtitle, 
         <span>{subtitle}</span>
       </p>
       <h2
-        className="text-[clamp(2rem,4vw,3.5rem)] font-medium tracking-[-0.03em] leading-none"
+        className="text-[clamp(2rem,4vw,3.5rem)] font-light tracking-[-0.03em] leading-none"
         style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
       >
         {title}

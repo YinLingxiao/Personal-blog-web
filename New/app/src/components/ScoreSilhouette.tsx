@@ -1,3 +1,4 @@
+import { useMotionPolicy } from '@/components/motion/motion';
 import React, { useLayoutEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -21,11 +22,12 @@ const ScoreSilhouette: React.FC<ScoreSilhouetteProps> = ({ piece, variant, class
   const isMobile = useIsMobile();
   const motif = scoreMotifs[piece];
 
+  const { reduced } = useMotionPolicy();
   useLayoutEffect(() => {
     const root = rootRef.current;
     if (!root) return;
 
-    const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    const reducedMotion = reduced;
     const staffLayers = root.querySelectorAll<HTMLElement>('[data-score-staff]');
     const noteLayers = root.querySelectorAll<HTMLElement>('[data-score-notes]');
 
@@ -53,7 +55,7 @@ const ScoreSilhouette: React.FC<ScoreSilhouetteProps> = ({ piece, variant, class
     }, root);
 
     return () => context.revert();
-  }, [isMobile, piece, motif]);
+  }, [reduced, isMobile, piece, motif]);
 
   return (
     <div

@@ -1,9 +1,9 @@
 import { useEffect, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useMotionPolicy } from '@/components/motion/motion';
 
 gsap.registerPlugin(ScrollTrigger);
-
 interface ScrollAnimationOptions {
   animation?: 'fadeUp' | 'fadeUpDelayed' | 'blurReveal' | 'slowRise' | 'badgePop' | 'stagger';
   delay?: number;
@@ -13,138 +13,22 @@ interface ScrollAnimationOptions {
   triggerStart?: string;
   childSelector?: string;
 }
-
 export function useScrollAnimation<T extends HTMLElement>(options: ScrollAnimationOptions = {}) {
   const ref = useRef<T>(null);
-
+  const { reduced } = useMotionPolicy();
+  const { animation = 'fadeUp', delay = 0, duration = .7, y = 16, stagger = .08, triggerStart = 'top 94%', childSelector } = options;
   useEffect(() => {
     const el = ref.current;
-    if (!el) return;
-
-    const {
-      animation = 'fadeUp',
-      delay = 0,
-      duration = 1.0,
-      y = 30,
-      stagger = 0.15,
-      triggerStart = 'top bottom-=10%',
-      childSelector,
-    } = options;
-
-    const targets = childSelector ? el.querySelectorAll(childSelector) : el;
-
-    let tween: gsap.core.Tween | gsap.core.Timeline;
-
-    switch (animation) {
-      case 'fadeUp':
-        gsap.set(targets, { opacity: 0, y });
-        tween = gsap.to(targets, {
-          opacity: 1,
-          y: 0,
-          duration,
-          delay,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: el,
-            start: triggerStart,
-            toggleActions: 'play none none none',
-          },
-        });
-        break;
-
-      case 'fadeUpDelayed':
-        gsap.set(targets, { opacity: 0, y });
-        tween = gsap.to(targets, {
-          opacity: 1,
-          y: 0,
-          duration,
-          delay: delay + 0.3,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: el,
-            start: triggerStart,
-            toggleActions: 'play none none none',
-          },
-        });
-        break;
-
-      case 'blurReveal':
-        gsap.set(targets, { opacity: 0, filter: 'blur(10px)' });
-        tween = gsap.to(targets, {
-          opacity: 1,
-          filter: 'blur(0px)',
-          duration: 1.2,
-          delay,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: el,
-            start: triggerStart,
-            toggleActions: 'play none none none',
-          },
-        });
-        break;
-
-      case 'slowRise':
-        gsap.set(targets, { opacity: 0, y: 60 });
-        tween = gsap.to(targets, {
-          opacity: 1,
-          y: 0,
-          duration: 2.0,
-          delay,
-          ease: 'power3.out',
-          scrollTrigger: {
-            trigger: el,
-            start: triggerStart,
-            toggleActions: 'play none none none',
-          },
-        });
-        break;
-
-      case 'badgePop':
-        gsap.set(targets, { opacity: 0, scale: 0 });
-        tween = gsap.to(targets, {
-          opacity: 1,
-          scale: 1,
-          duration: 0.6,
-          delay,
-          ease: 'back.out(1.7)',
-          stagger,
-          scrollTrigger: {
-            trigger: el,
-            start: triggerStart,
-            toggleActions: 'play none none none',
-          },
-        });
-        break;
-
-      case 'stagger':
-        gsap.set(targets, { opacity: 0, y });
-        tween = gsap.to(targets, {
-          opacity: 1,
-          y: 0,
-          duration,
-          delay,
-          ease: 'power3.out',
-          stagger,
-          scrollTrigger: {
-            trigger: el,
-            start: triggerStart,
-            toggleActions: 'play none none none',
-          },
-        });
-        break;
-
-      default:
-        return;
-    }
-
-    return () => {
-      if (tween) tween.kill();
-      ScrollTrigger.getAll().forEach(st => {
-        if (st.trigger === el) st.kill();
+    if (!el || reduced) return;
+    const context = gsap.context(() => {
+      const targets = childSelector ? el.querySelectorAll(childSelector) : el;
+      gsap.fromTo(targets, { y: animation === 'blurReveal' ? 0 : Math.min(y, 20), opacity: 1 }, {
+        y: 0, opacity: 1, duration: Math.min(duration, .8), delay: Math.min(delay, .15),
+        stagger: animation === 'stagger' ? stagger : 0, ease: 'power3.out',
+        scrollTrigger: { trigger: el, start: triggerStart, once: true },
       });
-    };
-  }, []);
-
+    }, el);
+    return () => context.revert();
+  }, [reduced, animation, delay, duration, y, stagger, triggerStart, childSelector]);
   return ref;
 }

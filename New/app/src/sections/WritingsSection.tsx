@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import SectionHeader from '@/components/SectionHeader';
 import ScoreSilhouette from '@/components/ScoreSilhouette';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
@@ -21,28 +21,42 @@ const WritingsSection: React.FC = () => {
   const [posts, setPosts] = useState<LatestPost[] | null>(null);
   const [errored, setErrored] = useState(false);
 
+  const categories = useMemo(() => {
+    const set = new Set<string>();
+    posts?.forEach((post) => post.category && set.add(post.category));
+    return Array.from(set);
+  }, [posts]);
+
   useEffect(() => {
     let cancelled = false;
-    fetch('/blog/latest.json', { cache: 'no-cache' })
-      .then((r) => {
-        if (!r.ok) throw new Error(`HTTP ${r.status}`);
-        return r.json();
-      })
-      .then((data: LatestPost[]) => {
+
+    const load = async (url: string) => {
+      const response = await fetch(url, { cache: 'no-cache' });
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data: LatestPost[] = await response.json();
+      if (!Array.isArray(data)) throw new Error('shape');
+      return data;
+    };
+
+    // 博客服务未就位时退回构建期快照，节目单不再整段变成幕间。
+    load('/blog/latest.json')
+      .catch(() => load('/writings-fallback.json'))
+      .then((data) => {
         if (!cancelled) setPosts(data.slice(0, 3));
       })
       .catch(() => {
         if (!cancelled) setErrored(true);
       });
+
     return () => {
       cancelled = true;
     };
   }, []);
 
   return (
-    <section id="ballade" className="score-host relative overflow-hidden">
+    <section id="ballade" className="score-host relative overflow-hidden py-20 md:py-28">
       <ScoreSilhouette piece="ballade" variant="section" />
-      <div className="relative z-10 max-w-[1200px] mx-auto px-6 md:px-8 py-16 md:py-24">
+      <div className="relative z-10 max-w-[1200px] w-full mx-auto px-6 md:px-8">
         <div ref={headerRef}>
           <SectionHeader number="02" title="Ballade" subtitle="文章 · Essays & Writings" />
         </div>
@@ -124,6 +138,28 @@ const WritingsSection: React.FC = () => {
           )}
 
           {posts && posts.length > 0 && (
+            <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2 mt-10">
+              <a
+                href="/blog/"
+                className="text-[0.75rem] tracking-[0.06em] transition-colors hover:text-[var(--fg)]"
+                style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}
+              >
+                全部
+              </a>
+              {categories.map((cat) => (
+                <a
+                  key={cat}
+                  href={`/blog/?category=${encodeURIComponent(cat)}`}
+                  className="text-[0.75rem] tracking-[0.06em] transition-colors hover:text-[var(--fg)]"
+                  style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}
+                >
+                  {cat}
+                </a>
+              ))}
+            </div>
+          )}
+
+          {posts && posts.length > 0 && (
             <ul style={{ borderTop: '1px solid var(--border)' }}>
               {posts.map((p, index) => (
                 <li key={p.url}>
@@ -142,7 +178,7 @@ const WritingsSection: React.FC = () => {
                     </span>
                     <div
                       className="flex items-center gap-3 text-[0.625rem] tracking-[0.12em] uppercase md:col-start-3 md:row-start-1 md:justify-self-end"
-                      style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
+                      style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
                     >
                       <time dateTime={p.dateISO}>{p.dateLabel}</time>
                       {p.category && (

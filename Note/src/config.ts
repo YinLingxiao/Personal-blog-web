@@ -18,6 +18,9 @@ export interface HeaderConfig {
   homeUrl: string
   homeButtonLabel: string
   homeButtonTitle: string
+  blogUrl: string
+  blogButtonLabel: string
+  blogButtonTitle: string
 }
 
 export interface BackgroundOption {
@@ -92,6 +95,10 @@ export const headerConfig: HeaderConfig = {
   homeUrl: import.meta.env.DEV ? "http://localhost:8080/" : "https://moqian.me/",
   homeButtonLabel: "主页",
   homeButtonTitle: "返回主页",
+  // 生产环境博客反向代理在主站 /blog/；本地是独立 dev server 的 :3000。
+  blogUrl: import.meta.env.DEV ? "http://localhost:3000/blog/" : "https://moqian.me/blog/",
+  blogButtonLabel: "博文",
+  blogButtonTitle: "前往博文",
 }
 
 export const backgroundConfig: BackgroundConfig = {

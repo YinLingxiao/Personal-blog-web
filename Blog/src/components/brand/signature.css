@@ -1,0 +1,21 @@
+.moqian-signature {
+  display: block;
+  flex-shrink: 0;
+  overflow: visible;
+  color: inherit;
+}
+
+.moqian-signature__ink {
+  clip-path: inset(-4%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .moqian-signature__ink {
+    clip-path: none !important;
+    opacity: 1 !important;
+  }
+
+  .moqian-signature__stroke {
+    opacity: 0 !important;
+  }
+}

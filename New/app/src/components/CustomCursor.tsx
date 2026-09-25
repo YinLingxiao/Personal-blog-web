@@ -1,18 +1,29 @@
 import { useEffect, useRef, memo } from 'react';
 import { useCustomCursor } from '@/hooks/useCustomCursor';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
+import { useMotionPolicy } from '@/components/motion/motion';
 
 const CustomCursorInner = memo(function CustomCursorInner() {
-  const isMobile = useIsMobile();
+  const finePointer = useMediaQuery('(hover: hover) and (pointer: fine)');
+  const { reduced } = useMotionPolicy();
+  const enabled = finePointer && !reduced;
   const cursorRef = useRef<HTMLDivElement>(null);
   const glowRef = useRef<HTMLDivElement>(null);
-  const { setCursorElements } = useCustomCursor(!isMobile);
+  const { setCursorElements } = useCustomCursor(enabled);
 
   useEffect(() => {
     setCursorElements(cursorRef.current, glowRef.current);
-  }, [setCursorElements]);
+    return () => setCursorElements(null, null);
+  }, [enabled, setCursorElements]);
 
-  if (isMobile) return null;
+  useEffect(() => {
+    if (!enabled) return;
+    const root = document.documentElement;
+    root.classList.add('custom-cursor-on');
+    return () => root.classList.remove('custom-cursor-on');
+  }, [enabled]);
+
+  if (!enabled) return null;
 
   return (
     <>
@@ -20,7 +31,8 @@ const CustomCursorInner = memo(function CustomCursorInner() {
       <div
         ref={cursorRef}
         className="custom-cursor fixed top-0 left-0 pointer-events-none z-[9999] opacity-0"
-        style={{ willChange: 'transform' }}
+        aria-hidden="true"
+        style={{ willChange: 'transform', mixBlendMode: 'difference' }}
       >
         <svg width="32" height="32" viewBox="0 0 32 32" fill="none">
           <rect x="14" y="14" width="4" height="4" fill="#080808" />
@@ -43,6 +55,7 @@ const CustomCursorInner = memo(function CustomCursorInner() {
       <div
         ref={glowRef}
         className="fixed top-0 left-0 pointer-events-none z-[9998] opacity-0"
+        aria-hidden="true"
         style={{
           width: '200px',
           height: '200px',

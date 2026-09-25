@@ -1,229 +1,97 @@
-import React, { useState, useCallback, useRef, useEffect } from 'react';
-import { gsap } from 'gsap';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import AsciiMoon from '@/components/AsciiMoon';
-import TypewriterText from '@/components/TypewriterText';
-import Badge from '@/components/Badge';
-import ParticleBackground from '@/components/ParticleBackground';
-import { useIsMobile } from '@/hooks/useMediaQuery';
+import StaticGalaxy from '@/components/StaticGalaxy';
+import { useMotionPolicy } from '@/components/motion/motion';
 import { scrollToSection } from '@/hooks/useSmoothScroll';
+import type { MoonScene } from '@/graphics/livingMoon';
 
-gsap.registerPlugin(ScrollTrigger);
+const CAPTIONS = {
+  moon: { zh: '月色入谱，流入星河', en: 'Moonlight enters the score, then flows into the stars.', action: '展开星河' },
+  galaxy: { zh: '星河缓行，归于月华', en: 'The galaxy drifts, returning to moonlight.', action: '收拢为月' },
+} as const;
 
-const BADGES = ['[ CS ]', '[ AI ]', '[ 美学&理学 ]'];
-const MOON_DIM = '#2A2A2A';
-const MOON_LIT = '#505050';
-
-const HeroSection: React.FC = () => {
-  const isMobile = useIsMobile();
-  const [typingDone, setTypingDone] = useState(false);
-  const sectionRef = useRef<HTMLElement>(null);
-  const contentRef = useRef<HTMLDivElement>(null);
-  const moonRef = useRef<HTMLDivElement>(null);
-  const moonGlowRef = useRef<HTMLDivElement>(null);
-  const titleRef = useRef<HTMLDivElement>(null);
-  const descRef = useRef<HTMLDivElement>(null);
-  const badgesRef = useRef<HTMLDivElement>(null);
-
-  const handleTypingComplete = useCallback(() => {
-    setTypingDone(true);
-  }, []);
-
+export default function HeroSection() {
+  const root = useRef<HTMLElement>(null), art = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), host = useRef<HTMLDivElement>(null);
+  const sceneRef = useRef<MoonScene | undefined>(undefined);
+  const [galaxy, setGalaxy] = useState(false);
+  const galaxyRef = useRef(galaxy);
+  const { reduced, quality } = useMotionPolicy();
+  useEffect(() => { galaxyRef.current = galaxy; sceneRef.current?.galaxy(galaxy); }, [galaxy]);
+  // 3D 月亮块加载期间先隐藏 ASCII 回退，避免首屏闪出占位月亮；须在绘制前设置，故用 layout effect
+  useLayoutEffect(() => {
+    const artwork = art.current;
+    if (!artwork || reduced) return;
+    artwork.dataset.loading = 'true';
+    return () => { delete artwork.dataset.loading; };
+  }, [reduced, quality]);
   useEffect(() => {
-    if (!sectionRef.current || !contentRef.current) return;
-
-    const tween = gsap.to(contentRef.current, {
-      opacity: 0,
-      ease: 'none',
-      scrollTrigger: {
-        trigger: sectionRef.current,
-        start: 'top top',
-        end: '30% top',
-        scrub: true,
+    const section = root.current, container = host.current, artwork = art.current, surface = stage.current;
+    if (!section || !container || !artwork || !surface || reduced) return;
+    let scene: MoonScene | undefined, disposed = false, visible = true, progress = 0;
+    const hasHash = !!location.hash, pinned = quality === 'desktop' && !hasHash;
+    const apply = () => scene?.scroll(pinned ? progress : progress * .2, pinned ? progress : 0);
+    const trigger = ScrollTrigger.create({ trigger: section, start: 'top top',
+      end: pinned ? () => `+=${innerHeight * .65}` : 'bottom top', pin: pinned, pinSpacing: pinned, invalidateOnRefresh: true,
+      onUpdate: self => {
+        progress = self.progress; apply();
+        artwork.style.setProperty('--moon-scroll-opacity', String(pinned ? 1 : 1 - progress));
       },
     });
-
+    const pause = () => scene?.pause(document.hidden || !visible);
+    const observer = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; pause(); }); observer.observe(section);
+    const resize = new ResizeObserver(() => scene?.resize()); resize.observe(container);
+    document.addEventListener('visibilitychange', pause);
+    const fail = () => { delete artwork.dataset.loading; delete artwork.dataset.ready; artwork.dataset.fallback = 'true'; sceneRef.current = undefined; };
+    const frame = requestAnimationFrame(() => {
+      import('@/graphics/livingMoon').then(({ createMoon }) => {
+        if (disposed) return;
+        let arrival = !hasHash;
+        try { arrival = arrival && sessionStorage.getItem('moqian-moon-arrived') !== 'true'; sessionStorage.setItem('moqian-moon-arrived', 'true'); } catch { void 0; }
+        artwork.dataset.arrival = String(arrival);
+        try {
+          scene = createMoon(container, { mobile: quality !== 'desktop', arrival, galaxy: galaxyRef.current, surface,
+            onReady: () => { delete artwork.dataset.loading; artwork.dataset.ready = 'true'; },
+            onFallback: () => { fail(); scene?.dispose(); },
+          });
+          sceneRef.current = scene; scene.galaxy(galaxyRef.current); apply(); pause();
+        } catch { fail(); }
+      }).catch(fail);
+    });
     return () => {
-      tween.kill();
+      disposed = true; cancelAnimationFrame(frame); scene?.dispose(); sceneRef.current = undefined; trigger.kill(); observer.disconnect(); resize.disconnect();
+      document.removeEventListener('visibilitychange', pause); delete artwork.dataset.ready; delete artwork.dataset.fallback; delete artwork.dataset.arrival;
+      artwork.style.removeProperty('--moon-scroll-opacity');
     };
-  }, []);
-
-  useEffect(() => {
-    if (!typingDone) return;
-
-    const tl = gsap.timeline();
-
-    if (moonRef.current) {
-      tl.to(moonRef.current, { color: MOON_LIT, duration: 1.8, ease: 'power2.out' }, 0);
-    }
-
-    if (moonGlowRef.current) {
-      tl.to(moonGlowRef.current, { opacity: 1, duration: 2.2, ease: 'power2.out' }, 0);
-    }
-
-    if (titleRef.current) {
-      gsap.set(titleRef.current, { opacity: 0, y: 30 });
-      tl.to(titleRef.current, {
-        opacity: 1,
-        y: 0,
-        duration: 1.0,
-        ease: 'power3.out',
-      });
-    }
-
-    if (descRef.current) {
-      gsap.set(descRef.current, { opacity: 0, y: 30 });
-      tl.to(
-        descRef.current,
-        {
-          opacity: 1,
-          y: 0,
-          duration: 1.0,
-          ease: 'power3.out',
-        },
-        '-=0.7'
-      );
-    }
-
-    if (badgesRef.current) {
-      const badges = badgesRef.current.children;
-      gsap.set(badges, { opacity: 0, scale: 0 });
-      tl.to(
-        badges,
-        {
-          opacity: 1,
-          scale: 1,
-          duration: 0.6,
-          ease: 'back.out(1.7)',
-          stagger: 0.15,
-        },
-        '-=0.3'
-      );
-    }
-
-    return () => {
-      tl.kill();
-    };
-  }, [typingDone]);
-
-  return (
-    <section
-      ref={sectionRef}
-      className="relative min-h-[100dvh] flex flex-col items-center overflow-hidden"
-      style={{ paddingTop: '15vh' }}
-    >
-      <ParticleBackground />
-
-      <div ref={contentRef} className="relative z-10 w-full max-w-[1200px] px-6 md:px-8 flex flex-col items-center text-center">
-        <div
-          className="flex items-center gap-3 mb-8 text-[0.625rem] uppercase tracking-[0.28em]"
-          style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
-        >
-          <span className="w-8 h-px" style={{ backgroundColor: 'var(--border)' }} />
-          <span>00 · Prelude</span>
-          <span className="w-8 h-px" style={{ backgroundColor: 'var(--border)' }} />
-        </div>
-
-        <div
-          ref={moonRef}
-          className="relative mb-12"
-          style={{ color: isMobile ? MOON_LIT : MOON_DIM }}
-        >
-          <div
-            ref={moonGlowRef}
-            className="absolute pointer-events-none"
-            style={{
-              inset: '-45%',
-              background: 'radial-gradient(ellipse at center, var(--moon-glow) 0%, transparent 70%)',
-              opacity: isMobile ? 0.75 : 0,
-              zIndex: -1,
-            }}
-          />
-          {!isMobile ? (
-            <TypewriterText
-              text={`                        -------            \n                 ---------------         \n              --------~-------~~~--      \n            ------~~---~~---------~~-    \n           ------~--~~-~--~~-~-~~---~   \n          --~~-~-~~-~--~~--~~~~---~--   \n         ---~--~--~~--~~--~--~--~-~--   \n         ~-~-~-~~--~-~--~-~-~-~---~---  \n         ---~-~--~--~-~-~~--~--~--~-~-  \n          -~-~-~-~--~--~-~-~---~-~--~   \n           ~-~-~~-~--~~-~~--~~---~--    \n            ---~-~--~--~~--~-~-~--      \n              -~--~-~-~-~~-~~---        \n                 -~-~-~-~---            \n                        ~-              `}
-              speed={8}
-              className="block leading-[1.2] tracking-[0.05em] whitespace-pre"
-              style={{
-                fontFamily: 'var(--font-mono)',
-                fontSize: 'clamp(0.5rem, 1.2vw, 0.9rem)',
-              }}
-              onComplete={handleTypingComplete}
-            />
-          ) : (
-            <AsciiMoon
-              variant="small"
-              style={{ fontSize: '0.6rem' }}
-            />
-          )}
-        </div>
-
-        <div
-          ref={titleRef}
-          className="flex flex-col items-center gap-2"
-          style={{ opacity: isMobile ? 1 : 0 }}
-        >
-          <span
-            className="text-[1.05rem] tracking-[0.14em] md:text-[1.15rem]"
-            style={{ fontFamily: 'var(--font-literary)', color: 'var(--fg-muted)' }}
-          >
-            ·理性的代码，感性的乐章·
-          </span>
-          <h1
-            className="font-normal tracking-[0.06em]"
-            style={{
-              fontFamily: 'var(--font-calligraphy)',
-              color: '#f0ece4',
-              fontSize: 'clamp(3.75rem, 8vw, 7rem)',
-              lineHeight: 1.05,
-              textShadow: '0 0 32px rgba(240, 236, 228, 0.08)',
-            }}
-          >
-            墨浅
-          </h1>
-        </div>
-
-        <div
-          ref={descRef}
-          className="mt-8 max-w-[480px]"
-          style={{ opacity: isMobile ? 1 : 0 }}
-        >
-          <p
-            className="text-[1rem] leading-[2] tracking-[0.05em]"
-            style={{ fontFamily: 'var(--font-literary)', color: 'var(--fg-muted)' }}
-          >
-            指尖落下，编辑器里敲出的是逻辑，而这个小站，是我安放作品的独奏舞台
-          </p>
-
-          <a
-            href="#now"
-            onClick={(e) => {
-              e.preventDefault();
-              scrollToSection('#now');
-            }}
-            className="group inline-flex items-center gap-2 mt-8 text-[0.95rem] tracking-[0.14em] transition-colors duration-300 hover:text-[var(--fg)]"
-            style={{ fontFamily: 'var(--font-literary)', color: 'var(--fg-muted)' }}
-          >
-            序幕之后，是正曲
-            <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">
-              →
-            </span>
-          </a>
-        </div>
-
-        <div
-          ref={badgesRef}
-          className="flex flex-wrap items-center justify-center gap-3 mt-auto pt-[8vh] md:pt-[12vh] pb-8"
-        >
-          {BADGES.map((badge, i) => (
-            <div key={i} style={{ opacity: isMobile ? 1 : 0 }}>
-              <Badge>{badge}</Badge>
-            </div>
-          ))}
-        </div>
+  }, [reduced, quality]);
+  const mode = galaxy ? 'galaxy' : 'moon';
+  return <section id="prelude" ref={root} className="living-prelude">
+    <div className="prelude-heading"><span>00 / Prelude</span><span>墨浅 · A living score</span></div>
+    <div className="prelude-composition">
+      <div className="prelude-copy">
+        <p className="prelude-kicker">·安静的角落，文字的栖息地·</p><h1>墨浅</h1>
+        <p className="prelude-intro">在这里，我把内心书写，将创意编织。</p>
+        <a className="prelude-link" href="#now" onClick={e => {
+          if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
+          e.preventDefault(); scrollToSection('#now');
+        }}>序幕之后，是正曲 <span aria-hidden="true">→</span></a>
       </div>
-    </section>
-  );
-};
-
-export default HeroSection;
+      <div ref={art} className="moon-art" data-mode={mode}>
+        <div ref={stage} className="moon-stage">
+          <div className="moon-visual" aria-hidden="true">
+            <svg className="moon-orbits" viewBox="0 0 600 600"><circle cx="300" cy="300" r="250"/><path d="M30 300H68M532 300H570M300 30V68M300 532V570"/><circle cx="300" cy="300" r="205" strokeDasharray="1 15"/></svg>
+            <div className="moon-fallback"><div className="fallback-moon"><AsciiMoon /></div><StaticGalaxy className="fallback-galaxy" /></div>
+            <div ref={host} className="moon-canvas" />
+          </div>
+          <button type="button" className="moon-toggle" aria-pressed={galaxy} aria-label={CAPTIONS[mode].action} onClick={() => setGalaxy(open => !open)} />
+        </div>
+        <p className="moon-caption" aria-live="polite">
+          {(['moon', 'galaxy'] as const).map(key => <span key={key} data-active={key === mode} aria-hidden={key !== mode}>
+            <span lang="zh-CN">{CAPTIONS[key].zh}</span><span lang="en">{CAPTIONS[key].en}</span>
+          </span>)}
+        </p>
+      </div>
+    </div>
+    <div className="prelude-baseline" aria-hidden="true"><span>文字 · 创意 · 练习</span><span>Scroll to unfold ↓</span></div>
+  </section>;
+}

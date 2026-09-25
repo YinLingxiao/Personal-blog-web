@@ -35,6 +35,7 @@
 | `Home/` | Home 当前静态部署产物 | 静态服务 | 可直接部署 |
 | `Blog/` | 博客 SPA | `3000` | `base: /blog/` |
 | `Note/` | 知识笔记 SPA | `3001` | `base: /`，独立域名部署 |
+| `Site-api/` | 三端认证与超管内容接收 API | `8787` | Better Auth + Express + SQLite |
 | `Opus/posts/` | Blog 内容源 | N/A | 本地 Markdown，不入仓库 |
 | `Notes/` | Note 内容源 | N/A | 本地 Markdown，不入仓库 |
 
@@ -63,6 +64,7 @@ cd Personal-blog-web
 npm --prefix New/app install
 npm --prefix Blog install
 npm --prefix Note install
+npm --prefix Site-api install
 ```
 
 仓库不包含文章、笔记与构建产物。首次克隆后，需要在本地创建内容目录并生成数据：
@@ -86,6 +88,7 @@ npm --prefix Note run generate
 npm --prefix New/app run dev     # Home    → http://localhost:8080/
 npm --prefix Blog run dev        # Blog    → http://localhost:3000/blog/
 npm --prefix Note run dev        # Note    → http://localhost:3001/
+npm --prefix Site-api run dev    # Auth/API → http://localhost:8787/
 ```
 
 Home 开发服务会将 `/blog/*` 代理到 Blog 的 `3000` 端口。
@@ -151,6 +154,7 @@ Copy-Item New/app/dist/* Home/ -Recurse -Force
 | `https://moqian.me/` | `Home/` | 静态文件 + SPA fallback |
 | `https://moqian.me/blog/` | `Blog/dist/` | SPA，`/blog/` base |
 | `https://note.moqian.me/` | `Note/dist/` | SPA，根路径，独立域名 |
+| `https://api.moqian.me/` | `Site-api/dist/` Node 服务 | Google/GitHub OAuth、三端会话与超管上传 |
 
 生产服务器需配置 SPA history fallback。
 

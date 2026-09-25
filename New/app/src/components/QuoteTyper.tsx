@@ -1,5 +1,5 @@
 import React, { useEffect, useRef, useState } from 'react';
-import { useReducedMotion } from '@/hooks/useMediaQuery';
+import { useMotionPolicy } from '@/components/motion/motion';
 
 interface Quote {
   text: string;
@@ -20,7 +20,7 @@ const HOLD_MS = 5000;
 const GAP_MS = 600;
 
 const QuoteTyper: React.FC = () => {
-  const reducedMotion = useReducedMotion();
+  const { reduced: reducedMotion } = useMotionPolicy();
   const rootRef = useRef<HTMLDivElement>(null);
   const [started, setStarted] = useState(false);
   const [quoteIndex, setQuoteIndex] = useState(0);

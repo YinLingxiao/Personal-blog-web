@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { Note } from '../types';
 import { sidebarConfig } from '../config';
 import MoonPhase from './MoonPhase';
@@ -15,6 +16,25 @@ interface Props {
 }
 
 export default function Sidebar({ notes, selectedId, search, onSearch, onSelect, isMobile = false, open = false, onClose }: Props) {
+  const root = useRef<HTMLElement>(null);
+  const close = useRef(onClose);
+  useEffect(() => { close.current = onClose; }, [onClose]);
+  useEffect(() => {
+    if (!isMobile || !open || !root.current) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const panel = root.current;
+    const items = () => [...panel.querySelectorAll<HTMLElement>('button,input,a[href]')];
+    items()[0]?.focus();
+    const key = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') { event.preventDefault(); close.current?.(); }
+      if (event.key !== 'Tab') return;
+      const elements = items(), first = elements[0], last = elements.at(-1);
+      if (event.shiftKey && document.activeElement === first) { event.preventDefault(); last?.focus(); }
+      else if (!event.shiftKey && document.activeElement === last) { event.preventDefault(); first?.focus(); }
+    };
+    panel.addEventListener('keydown', key);
+    return () => { panel.removeEventListener('keydown', key); previous?.focus(); };
+  }, [isMobile, open]);
   const filtered = search
     ? notes.filter((n) => n.title.toLowerCase().includes(search.toLowerCase()) || n.content.toLowerCase().includes(search.toLowerCase()))
     : notes;
@@ -34,8 +54,9 @@ export default function Sidebar({ notes, selectedId, search, onSearch, onSelect,
           aria-hidden
         />
       )}
-      <aside className={asideClass}>
+      <aside ref={root} className={asideClass} inert={isMobile && !open} role={isMobile && open ? 'dialog' : undefined} aria-modal={isMobile && open ? true : undefined} aria-label="笔记目录">
       <div className="h-full flex flex-col relative z-10">
+        {isMobile && <button type="button" className="drawer-close" onClick={onClose} aria-label="关闭笔记目录">×</button>}
         <MoonPhase />
 
         <div className="px-3 pb-3">
@@ -69,10 +90,16 @@ export default function Sidebar({ notes, selectedId, search, onSearch, onSelect,
 
         {/* Footer branding */}
         <div className="p-3 border-t border-white/[0.03]">
-          <div className="text-center">
+          <div className="flex items-center justify-center gap-3">
             <span className="text-[10px] text-[#333] tracking-widest font-serif-cn">
               墨浅 &middot; {notes.length} {sidebarConfig.noteCountSuffix}
             </span>
+            <a
+              href="/rss.xml"
+              className="text-[10px] text-[#333] tracking-widest hover:text-[#666] transition-colors"
+            >
+              RSS
+            </a>
           </div>
         </div>
       </div>

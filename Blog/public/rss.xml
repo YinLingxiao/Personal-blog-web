@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>墨浅博文</title>
+    <link>https://moqian.me/blog/</link>
+    <description>于浅墨之间，写一点不急的字。个人随笔与技术札记的存放处。</description>
+    <language>zh-CN</language>
+    <lastBuildDate>Thu, 21 May 2026 00:00:00 GMT</lastBuildDate>
+    <atom:link href="https://moqian.me/blog/rss.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>2026年AI大模型选型指南：Claude、ChatGPT、Gemini、DeepSeek、Kimi、GLM深度横评</title>
+      <link>https://moqian.me/blog/post/model-choose</link>
+      <guid isPermaLink="true">https://moqian.me/blog/post/model-choose</guid>
+      <pubDate>Thu, 21 May 2026 00:00:00 GMT</pubDate>
+      <category>技术</category>
+      <description>2026年AI竞争格局全面重塑。本文从综合能力、性价比、Agent生态三条主线，横评六款主流模型，帮你找到最顺手的AI工作搭档。</description>
+    </item>
+    <item>
+      <title>留白这件事</title>
+      <link>https://moqian.me/blog/post/liubai</link>
+      <guid isPermaLink="true">https://moqian.me/blog/post/liubai</guid>
+      <pubDate>Tue, 05 May 2026 00:00:00 GMT</pubDate>
+      <category>随笔</category>
+      <description>不是所有空隙都需要被填满。留白不是浪费，是给目光一个可以停的地方。</description>
+    </item>
+    <item>
+      <title>读《苏菲的世界》：第一次被&quot;问题&quot;而不是&quot;答案&quot;打动</title>
+      <link>https://moqian.me/blog/post/sophie-world</link>
+      <guid isPermaLink="true">https://moqian.me/blog/post/sophie-world</guid>
+      <pubDate>Wed, 18 Mar 2026 00:00:00 GMT</pubDate>
+      <category>阅读</category>
+      <description>这本写给少年的哲学小说，第一次让我意识到 —— 真正深刻的不是答案，是问题本身。</description>
+    </item>
+  </channel>
+</rss>

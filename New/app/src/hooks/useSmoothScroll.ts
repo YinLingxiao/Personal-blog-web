@@ -1,64 +1,47 @@
-import { useEffect, useRef } from 'react';
+import { useEffect } from 'react';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { useMotionPolicy } from '@/components/motion/motion';
 
 gsap.registerPlugin(ScrollTrigger);
-
 let lenisInstance: Lenis | null = null;
-
-export function scrollToSection(target: string | number) {
-  if (lenisInstance) {
-    lenisInstance.scrollTo(target, { duration: 1.2 });
-    return;
-  }
-  if (typeof target === 'number') {
-    window.scrollTo({ top: target, behavior: 'smooth' });
-  } else {
-    document.querySelector(target)?.scrollIntoView({ behavior: 'smooth' });
-  }
+export function scrollToSection(target: string | number, history = true) {
+  const el = typeof target === 'string' ? document.getElementById(target.slice(1)) : null;
+  const top = typeof target === 'number' ? target : el ? window.scrollY + el.getBoundingClientRect().top - 88 : 0;
+  if (history) window.history.pushState(null, '', typeof target === 'string' ? target : `${location.pathname}${location.search}`);
+  if (lenisInstance) lenisInstance.scrollTo(top, { immediate: true, force: true });
+  else window.scrollTo({ top, behavior: 'instant' });
+  if (el) { el.tabIndex = -1; el.focus({ preventScroll: true }); }
 }
-
-export function stopScroll() {
-  lenisInstance?.stop();
-}
-
-export function startScroll() {
-  lenisInstance?.start();
-}
-
+export function stopScroll() { lenisInstance?.stop(); }
+export function startScroll() { lenisInstance?.start(); }
 export function useSmoothScroll() {
-  const lenisRef = useRef<Lenis | null>(null);
-
+  const { reduced, quality } = useMotionPolicy();
   useEffect(() => {
-    const lenis = new Lenis({
-      lerp: 0.08,
-      smoothWheel: true,
-    });
-
-    lenisRef.current = lenis;
+    if (reduced || quality !== 'desktop') return;
+    const lenis = new Lenis({ lerp: .09, smoothWheel: true, syncTouch: false });
     lenisInstance = lenis;
-
-    // Sync Lenis with GSAP ScrollTrigger
     lenis.on('scroll', ScrollTrigger.update);
-
-    // 使用命名回调引用：GSAP ticker 要求 add/remove 传入同一个函数对象，
-    // 匿名箭头函数或 lenis.raf 都指向不同引用，会导致组件卸载后仍然逐帧执行。
-    const updateLenis = (time: number) => {
-      lenis.raf(time * 1000);
+    const tick = (time: number) => lenis.raf(time * 1000);
+    gsap.ticker.add(tick);
+    return () => { gsap.ticker.remove(tick); lenis.destroy(); if (lenisInstance === lenis) lenisInstance = null; };
+  }, [reduced, quality]);
+  useEffect(() => {
+    const hash = () => { if (location.hash) scrollToSection(location.hash, false); };
+    const frame = requestAnimationFrame(hash);
+    const settle = location.hash ? new ResizeObserver(hash) : null;
+    const intents = ['wheel', 'touchstart', 'keydown', 'pointerdown'] as const;
+    const release = () => {
+      settle?.disconnect(); clearTimeout(timer);
+      intents.forEach(type => window.removeEventListener(type, release));
     };
-
-    gsap.ticker.add(updateLenis);
-    gsap.ticker.lagSmoothing(0);
-
-    return () => {
-      // 必须移除同一个引用，否则 ticker 中会一直残留已 destroy 的 Lenis 回调。
-      gsap.ticker.remove(updateLenis);
-      lenis.destroy();
-      lenisRef.current = null;
-      lenisInstance = null;
-    };
+    const timer = window.setTimeout(release, 2500);
+    if (settle) {
+      settle.observe(document.body);
+      intents.forEach(type => window.addEventListener(type, release, { passive: true }));
+    }
+    window.addEventListener('hashchange', hash);
+    return () => { cancelAnimationFrame(frame); release(); window.removeEventListener('hashchange', hash); };
   }, []);
-
-  return lenisRef;
 }

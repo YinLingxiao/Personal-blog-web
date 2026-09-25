@@ -12,6 +12,9 @@ __pycache__/
 # Local machine state
 .agents/
 .claude/
+.cursor/
+.impeccable/
+.opencode/
 tmp/
 
 # Private authoring area
@@ -31,6 +34,11 @@ Blog/public/latest.json
 Note/dist/
 Note/src/generated/
 Note/public/posts/
+Site-api/data/
+Site-api/dist/
+*.sqlite
+*.sqlite-shm
+*.sqlite-wal
 video-downloader/
 
 *.log

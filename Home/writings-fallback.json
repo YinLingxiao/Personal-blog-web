@@ -1,0 +1,44 @@
+[
+  {
+    "title": "2026年AI大模型选型指南：Claude、ChatGPT、Gemini、DeepSeek、Kimi、GLM深度横评",
+    "url": "/blog/post/model-choose",
+    "dateISO": "2026-05-21",
+    "dateLabel": "2026.05.21",
+    "category": "技术",
+    "tags": [
+      "大模型对比",
+      "Claude",
+      "ChatGPT",
+      "DeepSeek",
+      "Kimi",
+      "GLM",
+      "Agent生态"
+    ],
+    "excerpt": "2026年AI竞争格局全面重塑。本文从综合能力、性价比、Agent生态三条主线，横评六款主流模型，帮你找到最顺手的AI工作搭档。"
+  },
+  {
+    "title": "留白这件事",
+    "url": "/blog/post/liubai",
+    "dateISO": "2026-05-05",
+    "dateLabel": "2026.05.05",
+    "category": "随笔",
+    "tags": [
+      "生活",
+      "思考"
+    ],
+    "excerpt": "不是所有空隙都需要被填满。留白不是浪费，是给目光一个可以停的地方。"
+  },
+  {
+    "title": "读《苏菲的世界》：第一次被\"问题\"而不是\"答案\"打动",
+    "url": "/blog/post/sophie-world",
+    "dateISO": "2026-03-18",
+    "dateLabel": "2026.03.18",
+    "category": "阅读",
+    "tags": [
+      "读书",
+      "哲学",
+      "思考"
+    ],
+    "excerpt": "这本写给少年的哲学小说，第一次让我意识到 —— 真正深刻的不是答案，是问题本身。"
+  }
+]

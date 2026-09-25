@@ -1,38 +1,12 @@
-import { useEffect, useRef, useState } from 'react';
 import { headerConfig } from '@/config';
+import MoqianSignature from './brand/MoqianSignature';
+import BrandMark from './brand/BrandMark';
 
 export default function NoteBrandHome() {
-  const textRef = useRef<SVGTextElement>(null);
-  const [len, setLen] = useState(92);
-
-  useEffect(() => {
-    const measure = () => {
-      if (textRef.current) {
-        const width = textRef.current.getComputedTextLength();
-        if (width > 0) setLen(width);
-      }
-    };
-    if (document.fonts) {
-      document.fonts.load('28px "Great Vibes"', 'Moqian').then(measure).catch(() => undefined);
-      document.fonts.ready.then(measure).catch(() => undefined);
-    } else {
-      measure();
-    }
-  }, []);
-
   return (
-    <a href={headerConfig.homeUrl} className="note-brand-home block h-8" aria-label="返回网站主页">
-      <svg
-        className="note-brand block h-8 w-auto"
-        viewBox={`0 0 ${Math.ceil(len + 6)} 36`}
-        preserveAspectRatio="xMinYMid meet"
-        style={{ '--brand-len': len } as React.CSSProperties}
-        aria-hidden="true"
-      >
-        <text ref={textRef} x="3" y="26" fontSize="28" style={{ fontFamily: 'var(--font-brand)' }}>
-          Moqian
-        </text>
-      </svg>
+    <a href={headerConfig.homeUrl} className="note-brand-home flex items-center gap-4 h-9" aria-label="返回网站主页">
+      <MoqianSignature className="h-8 w-auto" />
+      <BrandMark className="h-9" />
     </a>
   );
 }

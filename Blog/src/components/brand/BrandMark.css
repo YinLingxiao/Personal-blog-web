@@ -1,0 +1,27 @@
+.brand-mark {
+  display: block;
+  flex: none;
+  width: auto;
+  overflow: visible;
+  color: #e9e6df;
+  transform: translateY(-1px);
+}
+
+.brand-mark__moon {
+  transform-origin: 50px 95px;
+}
+
+.brand-mark__star {
+  transform-origin: 44px 73px;
+}
+
+.brand-mark > path {
+  transform-box: view-box;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .brand-mark > path {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+}

@@ -1,0 +1,91 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>墨浅笔记</title>
+    <link>https://note.moqian.me/</link>
+    <description>案头随手的笔记与札记，未必成文，但都在生长。</description>
+    <language>zh-CN</language>
+    <lastBuildDate>Tue, 26 May 2026 13:35:24 GMT</lastBuildDate>
+    <atom:link href="https://note.moqian.me/rss.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Gauss公式（Gauss Formula）—— 系统总结</title>
+      <link>https://note.moqian.me/post/Gauss%20%E5%85%AC%E5%BC%8F</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/Gauss%20%E5%85%AC%E5%BC%8F</guid>
+      <pubDate>Tue, 26 May 2026 13:35:24 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：Gauss公式是格林公式在三维空间的推广——它将空间闭区域上的三重积分与该区域边界闭曲面上的第二型曲面积分联系起来，是计算封闭曲面上向量场通量的核心工具，也是引入&quot;散度&quot;概念的桥梁。 --- 一、Gauss公式（核心定理） 1.1 定理陈述 设空间闭区域 由分片光滑的闭曲面 所围成，且 取外侧（外法向）。若函数 、 、 在 上具有连续的一阶偏导数，则 1.2 与两类曲面积分的联系 利用方向余弦，Gauss公式也可写成第一型曲…</description>
+    </item>
+    <item>
+      <title>重积分的应用 —— 系统总结</title>
+      <link>https://note.moqian.me/post/%E9%87%8D%E7%A7%AF%E5%88%86%E7%9A%84%E5%BA%94%E7%94%A8</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/%E9%87%8D%E7%A7%AF%E5%88%86%E7%9A%84%E5%BA%94%E7%94%A8</guid>
+      <pubDate>Tue, 26 May 2026 11:37:46 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：重积分是几何量（体积、面积）和物理量（质量、质心、转动惯量、引力）的统一计算框架——一旦建立好&quot;微元 → 积分&quot;的思想，所有公式都可自然推出，无需死记。 --- 一、立体体积 1.1 曲顶柱体体积 顶为连续曲面 ，底为 面上区域 ： 1.2 一般空间立体体积 占有空间区域 的立体： 1.3 两曲面所围体积 若立体上顶为 ，下底为 ， ： --- 二、曲面的面积 2.1 显式曲面 投影到 面，投影域为 ： 2.2 其他投影情形…</description>
+    </item>
+    <item>
+      <title>二重积分的计算法 —— 系统总结</title>
+      <link>https://note.moqian.me/post/%E4%BA%8C%E9%87%8D%E7%A7%AF%E5%88%86%E7%9A%84%E8%AE%A1%E7%AE%97</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/%E4%BA%8C%E9%87%8D%E7%A7%AF%E5%88%86%E7%9A%84%E8%AE%A1%E7%AE%97</guid>
+      <pubDate>Tue, 26 May 2026 11:36:54 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：二重积分的计算核心是&quot;化二次积分&quot;——选择合适的坐标系（直角/极坐标）和积分次序（先 还是先 ），把二重积分变成两个定积分的套娃。选对次序和坐标系，难题变简单；选错则寸步难行。 --- 一、利用直角坐标计算 1.1 X-型区域 若 可表示为 则 1.2 Y-型区域 若 可表示为 则 1.3 积分次序选择口诀 &quot;后积先定限，限内画条线，先交下限写，后交上限见。&quot; | 考虑因素 | 优先选择 | | :--- | :--- | …</description>
+    </item>
+    <item>
+      <title>格林公式及其应用 —— 系统总结</title>
+      <link>https://note.moqian.me/post/%E6%A0%BC%E6%9E%97%E5%85%AC%E5%BC%8F</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/%E6%A0%BC%E6%9E%97%E5%85%AC%E5%BC%8F</guid>
+      <pubDate>Tue, 26 May 2026 11:35:00 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：格林公式是牛顿-莱布尼茨公式在二维的推广——它将平面闭区域上的二重积分与该区域边界上的曲线积分联系起来，是计算第二型曲线积分、判断路径无关性、求全微分原函数的核心工具。 --- 一、预备知识 1.1 单连通与多连通区域 | 类型 | 定义 | 例子 | | :--- | :--- | :--- | | 单连通区域 | 区域内任意简单闭曲线所围部分都属于该区域 | 圆盘、矩形、全平面 | | 多连通区域 | 含有&quot;洞&quot;、&quot;缝&quot;…</description>
+    </item>
+    <item>
+      <title>Stokes公式（Stokes Formula）—— 系统总结</title>
+      <link>https://note.moqian.me/post/Stokes%20%E5%85%AC%E5%BC%8F</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/Stokes%20%E5%85%AC%E5%BC%8F</guid>
+      <pubDate>Tue, 26 May 2026 11:34:26 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：Stokes公式是格林公式向空间曲线的推广——它将空间闭曲线上的第二型曲线积分转化为以该曲线为边界的有向曲面上的第二型曲面积分，是计算空间环量、引入&quot;旋度&quot;概念的核心工具。 --- 一、Stokes公式（核心定理） 1.1 定理陈述 设 为分段光滑的空间有向闭曲线， 是以 为边界的分片光滑有向曲面， 的正向与 的侧符合右手定则。若 在 上具有一阶连续偏导数，则 展开即为： 1.2 第一型曲面积分形式 利用方向余弦 （ 的单位…</description>
+    </item>
+    <item>
+      <title>二重积分概念与性质 —— 系统总结</title>
+      <link>https://note.moqian.me/post/%E4%BA%8C%E9%87%8D%E7%A7%AF%E5%88%86%E6%A6%82%E5%BF%B5</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/%E4%BA%8C%E9%87%8D%E7%A7%AF%E5%88%86%E6%A6%82%E5%BF%B5</guid>
+      <pubDate>Tue, 26 May 2026 11:25:16 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：二重积分是定积分从&quot;区间&quot;到&quot;平面区域&quot;的推广，几何上求曲顶柱体体积，物理上求平面薄片质量。它是一整套多元积分（三重、曲线、曲面积分）的入门原型。 --- 一、概念与定义 1.1 引例 —— 两个经典动机 | 问题 | 物理量 | 核心思想 | | :--- | :--- | :--- | | 曲顶柱体的体积 | 体积 | 底为 面上区域 ，顶为连续曲面 | | 平面薄片的质量 | 质量 | 占有区域 ，面密度 连续 | 两…</description>
+    </item>
+    <item>
+      <title>第一型曲线积分 —— 系统总结</title>
+      <link>https://note.moqian.me/post/%E7%AC%AC%E4%B8%80%E5%9E%8B%E6%9B%B2%E7%BA%BF%E7%A7%AF%E5%88%86</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/%E7%AC%AC%E4%B8%80%E5%9E%8B%E6%9B%B2%E7%BA%BF%E7%A7%AF%E5%88%86</guid>
+      <pubDate>Tue, 26 May 2026 09:43:58 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：第一型曲线积分（对弧长的曲线积分）将定积分从&quot;区间&quot;推广到&quot;曲线弧&quot;，积的是标量函数沿曲线的累积量（最典型：曲线形构件的质量）。它与第二型曲线积分平行——前者无视方向，后者依赖方向。计算上归结为定积分（参数化 + 弧长微元 ）。 --- 一、概念与定义 1.1 物理动机 —— 曲线形构件的质量 设空间曲线弧段 ，线密度为 。用&quot;分割、代替、作和、取极限&quot;： 这个极限正是第一型曲线积分。 1.2 严格定义 设 是空间中一条有限…</description>
+    </item>
+    <item>
+      <title>第一型曲面积分 —— 系统总结</title>
+      <link>https://note.moqian.me/post/%E7%AC%AC%E4%B8%80%E5%9E%8B%E6%9B%B2%E9%9D%A2%E7%A7%AF%E5%88%86</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/%E7%AC%AC%E4%B8%80%E5%9E%8B%E6%9B%B2%E9%9D%A2%E7%A7%AF%E5%88%86</guid>
+      <pubDate>Tue, 26 May 2026 09:43:46 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：第一型曲面积分（对面积的曲面积分）将二重积分从&quot;平面区域&quot;推广到&quot;空间曲面&quot;，积的是标量函数在曲面上的累积（如曲面形构件的质量、曲面的面积）。它与第二型曲面积分通过方向余弦联系，计算上归结为投影 + 二重积分。核心特性：与曲面的侧无关。 --- 一、概念与定义 1.1 物理动机 —— 曲面形构件的质量 设曲面形构件 具有连续面密度 ，用&quot;分割、代替、作和、取极限&quot;： 1.2 严格定义 设 为光滑曲面， 是定义在 上的有界函数…</description>
+    </item>
+    <item>
+      <title>第二型曲线积分 —— 系统总结</title>
+      <link>https://note.moqian.me/post/%E7%AC%AC%E4%BA%8C%E5%9E%8B%E6%9B%B2%E7%BA%BF%E7%A7%AF%E5%88%86</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/%E7%AC%AC%E4%BA%8C%E5%9E%8B%E6%9B%B2%E7%BA%BF%E7%A7%AF%E5%88%86</guid>
+      <pubDate>Tue, 26 May 2026 09:43:26 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：第二型曲线积分（对坐标的曲线积分）计算向量场沿有向曲线的功/环量；它与第一型曲线积分通过切向方向余弦联系，最大的特征是换向必变号。物理原型是变力沿曲线做功。 --- 一、概念与定义 1.1 物理动机 —— 变力沿曲线所作的功 设质点在力场 作用下，沿 面内从 到 的光滑曲线弧 移动。 - 恒力沿直线： - 变力沿曲线：用&quot;分割、代替、作和、取极限&quot;： 1.2 严格定义 设 为 面内从 到 的一条有向光滑曲线弧，向量函数 在 …</description>
+    </item>
+    <item>
+      <title>第二型曲面积分 —— 系统总结</title>
+      <link>https://note.moqian.me/post/%E7%AC%AC%E4%BA%8C%E5%9E%8B%E6%9B%B2%E9%9D%A2%E7%A7%AF%E5%88%86</link>
+      <guid isPermaLink="true">https://note.moqian.me/post/%E7%AC%AC%E4%BA%8C%E5%9E%8B%E6%9B%B2%E9%9D%A2%E7%A7%AF%E5%88%86</guid>
+      <pubDate>Tue, 26 May 2026 09:43:04 GMT</pubDate>
+      <category>高等数学</category>
+      <description>一句话定位：第二型曲面积分（对坐标的曲面积分）计算向量场穿过有向曲面的通量（流量），介于第一型曲面积分与 Gauss 公式之间；它与第一型曲面积分通过方向余弦联系，与第二型曲线积分曲线积分在&quot;定侧/定向&quot;上高度平行。 --- 一、概念与定义 1.1 有向曲面 在曲面 上任一点都有两个相反的法向量。选定了法向量指向（即选定了侧）的曲面，称为有向曲面。 | 曲面表示 | 侧的分类 | 判定条件 | 法向量说明 | | :----------…</description>
+    </item>
+  </channel>
+</rss>

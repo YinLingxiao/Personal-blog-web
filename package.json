@@ -2,6 +2,8 @@
   "name": "moqian-local-workspace",
   "private": true,
   "scripts": {
+    "dev:auth": "npm --prefix Site-api run dev",
+    "quality:auth": "npm --prefix Site-api run quality",
     "quality:blog": "npm --prefix Blog run quality",
     "quality:note": "npm --prefix Note run quality",
     "quality:content-sites": "npm run quality:blog && npm run quality:note"

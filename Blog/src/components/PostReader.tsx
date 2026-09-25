@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import ReactMarkdown from 'react-markdown';
+import ReactMarkdown, { defaultUrlTransform } from 'react-markdown';
 import remarkGfm from 'remark-gfm';
 import remarkMath from 'remark-math';
 import rehypeKatex from 'rehype-katex';
@@ -35,7 +35,7 @@ export default function PostReader({ post, allPosts, onNavigate }: Props) {
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkMath]}
           rehypePlugins={[rehypeKatex]}
-          urlTransform={(url) => url}
+          urlTransform={(url) => url.startsWith('wiki:') ? url : defaultUrlTransform(url)}
           components={{
             a: ({ href, children }) => {
               if (href?.startsWith('wiki:')) {

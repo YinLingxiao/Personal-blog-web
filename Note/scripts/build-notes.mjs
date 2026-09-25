@@ -5,11 +5,78 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-const PROFILE = { contentDir: '../Notes', urlBase: '' };
+const PROFILE = {
+  contentDir: process.env.NOTE_CONTENT_ROOT || '../Notes',
+  urlBase: '',
+  feed: {
+    origin: process.env.NOTE_SITE_ORIGIN || 'https://note.moqian.me',
+    title: '墨浅笔记',
+    description: '案头随手的笔记与札记，未必成文，但都在生长。',
+    language: 'zh-CN',
+    max: 20,
+  },
+};
 
 const OPUS_POSTS = resolve(ROOT, PROFILE.contentDir);
 const OUT_NOTES = resolve(ROOT, 'src/generated/notes.json');
 const OUT_PUBLIC_POSTS = resolve(ROOT, 'public/posts');
+const OUT_RSS = resolve(ROOT, 'public/rss.xml');
+
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// Markdown 摘要仅用于 RSS description：去掉代码块、公式、图片与行内标记，保留可读句子。
+function plainExcerpt(markdown, limit = 220) {
+  const text = markdown
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/\$\$[\s\S]*?\$\$/g, ' ')
+    .replace(/\$[^$\n]*\$/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[\[([^\]|]+)(\|[^\]]+)?\]\]/g, '$1')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/^\s{0,3}>\s?/gm, '')
+    .replace(/[*_`~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.length > limit ? `${text.slice(0, limit)}…` : text;
+}
+
+function buildRss({ items, feed, urlBase, feedPath }) {
+  const site = `${feed.origin}${urlBase}/`;
+  const self = `${feed.origin}${feedPath}`;
+  const entries = items.map((item) => {
+    const link = `${feed.origin}${item.path}`;
+    const category = item.category ? `\n      <category>${escapeXml(item.category)}</category>` : '';
+    return `    <item>
+      <title>${escapeXml(item.title)}</title>
+      <link>${escapeXml(link)}</link>
+      <guid isPermaLink="true">${escapeXml(link)}</guid>
+      <pubDate>${new Date(item.timestamp).toUTCString()}</pubDate>${category}
+      <description>${escapeXml(item.description)}</description>
+    </item>`;
+  });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${escapeXml(feed.title)}</title>
+    <link>${escapeXml(site)}</link>
+    <description>${escapeXml(feed.description)}</description>
+    <language>${escapeXml(feed.language)}</language>
+    <lastBuildDate>${new Date(items[0]?.timestamp ?? Date.now()).toUTCString()}</lastBuildDate>
+    <atom:link href="${escapeXml(self)}" rel="self" type="application/rss+xml" />
+${entries.join('\n')}
+  </channel>
+</rss>
+`;
+}
 
 function parseFrontmatter(raw) {
   raw = raw.replace(/\r\n?/g, '\n'); // normalize CRLF/CR → LF (Obsidian on Windows often saves CRLF)
@@ -160,11 +227,6 @@ function parseDate(value) {
   return { ok: true, ts: date.getTime() };
 }
 
-function toTimestamp(value) {
-  const parsed = parseDate(value);
-  return parsed.ok ? parsed.ts : Date.now();
-}
-
 function build() {
   console.log(`[build-notes] content=${relative(ROOT, OPUS_POSTS)}  urlBase="/"`);
   const posts = walkPosts();
@@ -224,11 +286,11 @@ function build() {
       console.warn(`[build-notes] 无效日期: "${slug}" date="${data.date}"`);
     }
 
-    const created = dateResult.ok ? dateResult.ts : Date.now();
-    // updated 缺省或无效时回退到 date；date 也无效时再用 Date.now() 兜底。
+    const fileModified = Math.trunc(statSync(file).mtimeMs);
+    const created = dateResult.ok ? dateResult.ts : fileModified;
     const updated = updatedResult.ok
       ? updatedResult.ts
-      : (dateResult.ok ? dateResult.ts : Date.now());
+      : (dateResult.ok ? dateResult.ts : fileModified);
     notes.push({
       id: slug,
       title,
@@ -245,11 +307,27 @@ function build() {
   }
 
   // Sort by updatedAt desc, stable
-  notes.sort((a, b) => b.updatedAt - a.updatedAt);
+  notes.sort((a, b) => b.updatedAt - a.updatedAt || a.id.localeCompare(b.id));
 
   mkdirSync(dirname(OUT_NOTES), { recursive: true });
   writeFileSync(OUT_NOTES, JSON.stringify(notes, null, 2), 'utf8');
   console.log(`[build-notes] wrote ${notes.length} notes → ${relative(ROOT, OUT_NOTES)}`);
+
+  const feedItems = notes.slice(0, PROFILE.feed.max).map((note) => ({
+    title: note.title,
+    path: `/post/${encodeURIComponent(note.id)}`,
+    timestamp: note.updatedAt,
+    category: note.category,
+    description: note.summary || plainExcerpt(note.content),
+  }));
+  mkdirSync(dirname(OUT_RSS), { recursive: true });
+  writeFileSync(OUT_RSS, buildRss({
+    items: feedItems,
+    feed: PROFILE.feed,
+    urlBase: PROFILE.urlBase,
+    feedPath: '/rss.xml',
+  }), 'utf8');
+  console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
 }
 
 build();

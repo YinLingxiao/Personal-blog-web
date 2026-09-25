@@ -1,17 +1,9 @@
-import { useRef, useEffect, useState, useCallback } from 'react';
+import { useRef, useEffect, useState } from 'react';
 import * as d3 from 'd3';
 import type { SimulationLinkDatum, SimulationNodeDatum } from 'd3';
 import type { GraphData, GraphNode } from '../types';
 import { graphConfig } from '../config';
-import { useIsMobile } from '@/hooks/useMediaQuery';
-
-/** Device-specific graph dimensions, kept in one place so the render code below
- *  stays free of scattered isMobile ternaries. Mobile = bigger touch targets,
- *  larger labels, and no glow filter (cheaper to paint). */
-const SIZING = {
-  desktop: { catMin: 16, catScale: 11, noteMin: 5, noteScale: 5.5, catFont: 13, noteFont: 11, glow: true },
-  mobile: { catMin: 20, catScale: 13, noteMin: 8, noteScale: 6.5, catFont: 16, noteFont: 14, glow: false },
-} as const;
+import { useMotionPolicy } from './motion/motion';
 
 interface Props {
   data: GraphData;
@@ -20,191 +12,130 @@ interface Props {
   scope?: string | null;
   onBack?: () => void;
 }
-
-const COLORS = [
-  '#c8956c', '#d4a574', '#b8845e', '#a07050',
-  '#c0a080', '#d09060', '#b09070', '#c8a888',
-];
-
-interface SimulationGraphNode extends GraphNode, SimulationNodeDatum {}
-
-interface SimulationGraphLink extends SimulationLinkDatum<SimulationGraphNode> {
-  source: string | SimulationGraphNode;
-  target: string | SimulationGraphNode;
-}
-
-const isGhost = (node: SimulationGraphNode) => node.kind === 'ghost';
-const isCategory = (node: SimulationGraphNode) => node.kind === 'category';
-const endpointId = (endpoint: string | SimulationGraphNode) => typeof endpoint === 'string' ? endpoint : endpoint.id;
-const endpointNode = (endpoint: string | SimulationGraphNode) => typeof endpoint === 'string' ? undefined : endpoint;
+interface Node extends GraphNode, SimulationNodeDatum {}
+interface Edge extends SimulationLinkDatum<Node> { source: string | Node; target: string | Node }
+const endpoint = (n: string | Node) => typeof n === 'string' ? n : n.id;
+const ghost = (n: GraphNode) => n.kind === 'ghost';
+const category = (n: GraphNode) => n.kind === 'category';
 
 export default function GraphView({ data, onNodeClick, selectedNodeId, scope, onBack }: Props) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const svgRef = useRef<SVGSVGElement>(null);
-  const stableClick = useCallback((id: string) => onNodeClick(id), [onNodeClick]);
-  const isMobile = useIsMobile();
-  const sizing = isMobile ? SIZING.mobile : SIZING.desktop;
+  const containerRef = useRef<HTMLDivElement>(null), svgRef = useRef<SVGSVGElement>(null);
+  const action = useRef(onNodeClick);
+  const selection = useRef(selectedNodeId);
+  const emphasize = useRef<(id?: string | null) => void>(() => {});
+  const controls = useRef<(scale: number | null) => void>(() => {});
+  const { reduced } = useMotionPolicy();
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-
-  // Track container size so the canvas re-fits on window resize / device rotation.
+  useEffect(() => { action.current = onNodeClick; }, [onNodeClick]);
+  useEffect(() => { selection.current = selectedNodeId; emphasize.current(selectedNodeId); }, [selectedNodeId]);
   useEffect(() => {
-    const container = containerRef.current;
-    if (!container) return;
-    const ro = new ResizeObserver(([entry]) => {
+    if (!containerRef.current) return;
+    const observer = new ResizeObserver(([entry]) => {
       const { width, height } = entry.contentRect;
-      setDimensions({ width, height });
+      setDimensions(previous => previous.width === width && previous.height === height ? previous : { width, height });
     });
-    ro.observe(container);
-    return () => ro.disconnect();
+    observer.observe(containerRef.current);
+    return () => observer.disconnect();
   }, []);
-
   useEffect(() => {
-    const svgEl = svgRef.current;
+    const el = svgRef.current;
     const { width, height } = dimensions;
-    if (!svgEl || data.nodes.length === 0 || width === 0 || height === 0) return;
-
-    const svg = d3.select(svgEl).attr('width', width).attr('height', height);
+    if (!el || !width || !height) return;
+    const svg = d3.select(el).attr('viewBox', `0 0 ${width} ${height}`);
     svg.selectAll('*').remove();
-
-    const defs = svg.append('defs');
-    const filter = defs.append('filter').attr('id', 'glow').attr('x', '-50%').attr('y', '-50%').attr('width', '200%').attr('height', '200%');
-    filter.append('feGaussianBlur').attr('stdDeviation', '5').attr('result', 'blur');
-    const merge = filter.append('feMerge');
-    merge.append('feMergeNode').attr('in', 'blur');
-    merge.append('feMergeNode').attr('in', 'SourceGraphic');
-
-    const g = svg.append('g');
-    const zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([0.15, 5]).on('zoom', (e) => g.attr('transform', e.transform));
-    svg.call(zoom);
-
-    const nodes: SimulationGraphNode[] = data.nodes.map((node) => ({ ...node }));
-    const links: SimulationGraphLink[] = data.edges.map((edge) => ({ ...edge }));
-
-    const sim = d3.forceSimulation<SimulationGraphNode>(nodes)
-      .force('link', d3.forceLink<SimulationGraphNode, SimulationGraphLink>(links).id((node) => node.id).distance(160).strength(0.35))
-      .force('charge', d3.forceManyBody().strength(-400))
+    const group = svg.append('g');
+    const zoom = d3.zoom<SVGSVGElement, unknown>().scaleExtent([.2, 5]).on('zoom', e => group.attr('transform', e.transform));
+    svg.call(zoom).on('dblclick.zoom', null);
+    controls.current = value => {
+      if (value === null) svg.call(zoom.transform, d3.zoomIdentity);
+      else svg.call(zoom.scaleBy, value);
+    };
+    const nodes: Node[] = data.nodes.map((n, i) => ({ ...n, x: width / 2 + Math.cos(i * 2.399) * Math.sqrt(i + 1) * 30, y: height / 2 + Math.sin(i * 2.399) * Math.sqrt(i + 1) * 25 }));
+    const edges: Edge[] = data.edges.map(e => ({ ...e }));
+    const neighbors = new Map(nodes.map(n => [n.id, new Set([n.id])]));
+    edges.forEach(e => { neighbors.get(endpoint(e.source))?.add(endpoint(e.target)); neighbors.get(endpoint(e.target))?.add(endpoint(e.source)); });
+    const radius = (n: Node) => category(n) ? Math.min(45, 15 + Math.sqrt(n.count || 1) * 3) : Math.min(17, 5 + Math.sqrt(n.linkCount + 1) * 2);
+    const simulation = d3.forceSimulation(nodes).alphaDecay(.045).velocityDecay(.4)
+      .force('link', d3.forceLink<Node, Edge>(edges).id(n => n.id).distance(125).strength(.3))
+      .force('charge', d3.forceManyBody().strength(-260))
       .force('center', d3.forceCenter(width / 2, height / 2))
-      .force('collision', d3.forceCollide<SimulationGraphNode>().radius((node) => nodeRadius(node) + 10))
-      .force('x', d3.forceX(width / 2).strength(0.03))
-      .force('y', d3.forceY(height / 2).strength(0.03));
-
-    function nodeRadius(node: SimulationGraphNode) {
-      if (isCategory(node)) return Math.max(sizing.catMin, Math.sqrt((node.count || 1)) * sizing.catScale);
-      return Math.max(sizing.noteMin, Math.sqrt(node.linkCount + 1) * sizing.noteScale);
-    }
-
-    const link = g.append('g').selectAll('line').data(links).enter().append('line')
-      .attr('stroke', 'rgba(200,149,108,0.12)')
-      .attr('stroke-width', 1);
-
-    const node = g.append('g').selectAll<SVGGElement, SimulationGraphNode>('g').data(nodes).enter().append('g')
-      // desktop: hide cursor so the custom crosshair shows through; touch: native pointer
-      .style('cursor', isMobile ? 'pointer' : 'none')
-      .call(d3.drag<SVGGElement, SimulationGraphNode>()
-        .on('start', (e) => { if (!e.active) sim.alphaTarget(0.3).restart(); e.subject.fx = e.subject.x; e.subject.fy = e.subject.y; })
-        .on('drag', (e) => { e.subject.fx = e.x; e.subject.fy = e.y; })
-        .on('end', (e) => { if (!e.active) sim.alphaTarget(0); e.subject.fx = null; e.subject.fy = null; }));
-
-    node.append('circle')
-      .attr('r', nodeRadius)
-      .attr('fill', (node, index) => isGhost(node) ? 'none' : COLORS[index % COLORS.length])
-      .attr('fill-opacity', (node) => isGhost(node) ? 0 : (isCategory(node) ? 0.85 : 0.7))
-      .attr('stroke', (node) => isGhost(node) ? 'rgba(200,149,108,0.35)' : (node.id === selectedNodeId ? 'rgba(212,165,116,0.6)' : 'transparent'))
-      .attr('stroke-width', (node) => isGhost(node) ? 1.2 : 2)
-      .attr('stroke-dasharray', (node) => isGhost(node) ? '3 3' : 'none')
-      .attr('filter', (node) => (isGhost(node) || !sizing.glow) ? null : 'url(#glow)');
-
-    node.append('text')
-      .text((node) => {
-        const label = node.title.length > 14 ? `${node.title.slice(0, 13)}…` : node.title;
-        return isCategory(node) ? `${label} (${node.count})` : label;
-      })
-      .attr('dx', (node) => nodeRadius(node) + 6)
-      .attr('dy', 4)
-      .attr('fill', (node) => isGhost(node) ? '#4a4a4a' : (isCategory(node) ? '#bbb' : '#777'))
-      .attr('font-size', (node) => isCategory(node) ? `${sizing.catFont}px` : `${sizing.noteFont}px`)
-      .attr('font-style', (node) => isGhost(node) ? 'italic' : 'normal')
-      .attr('pointer-events', 'none');
-
-    node.on('click', (_, selected) => { if (!isGhost(selected)) stableClick(selected.id); });
-
-    node.on('mouseover', function (_, selected) {
-      d3.select(this).select('circle').attr('fill-opacity', 1).attr('stroke', 'rgba(212,165,116,0.6)');
-      link
-        .attr('stroke', (edge) => endpointId(edge.source) === selected.id || endpointId(edge.target) === selected.id ? 'rgba(200,149,108,0.35)' : 'rgba(200,149,108,0.03)')
-        .attr('stroke-width', (edge) => endpointId(edge.source) === selected.id || endpointId(edge.target) === selected.id ? 1.5 : 0.5);
-      node.select('circle').attr('fill-opacity', (candidate) => {
-        if (candidate.id === selected.id) return 1;
-        return links.some((edge) => (endpointId(edge.source) === selected.id && endpointId(edge.target) === candidate.id) || (endpointId(edge.target) === selected.id && endpointId(edge.source) === candidate.id)) ? 0.8 : 0.15;
+      .force('collision', d3.forceCollide<Node>().radius(n => radius(n) + 18))
+      .force('x', d3.forceX(width / 2).strength(.035)).force('y', d3.forceY(height / 2).strength(.035));
+    const lines = group.append('g').attr('aria-hidden', 'true').selectAll('line').data(edges).join('line').attr('stroke', '#777').attr('stroke-opacity', .24).attr('stroke-width', 1);
+    const node = group.append('g').selectAll<SVGGElement, Node>('g').data(nodes).join('g')
+      .attr('class', 'graph-node').attr('data-kind', n => n.kind || 'note').style('pointer-events', 'bounding-box')
+      .attr('tabindex', n => ghost(n) ? null : 0).attr('role', n => ghost(n) ? 'img' : 'button')
+      .attr('aria-label', n => `${n.title}${ghost(n) ? '，未解析链接' : category(n) ? `，${n.count} 篇笔记，打开分类` : '，打开笔记'}`)
+      .style('cursor', n => ghost(n) ? 'default' : 'pointer');
+    node.append('circle').attr('r', n => Math.max(22, radius(n) + 6)).attr('fill', 'transparent');
+    node.append('circle').attr('class', 'node-outline').attr('r', radius)
+      .attr('fill', n => ghost(n) || category(n) ? '#080808' : '#d3d0c8')
+      .attr('stroke', n => ghost(n) ? '#a09e97' : '#cac7be').attr('stroke-width', 1)
+      .attr('stroke-dasharray', n => ghost(n) ? '3 3' : null);
+    node.filter(category).append('circle').attr('r', n => radius(n) - 5).attr('fill', 'none').attr('stroke', '#8f8b82').attr('stroke-width', 1);
+    const labelLimit = width < 600 ? 7 : 15;
+    node.append('text').text(n => `${n.title.length > labelLimit ? n.title.slice(0, labelLimit - 1) + '…' : n.title}${category(n) ? ` (${n.count})` : ''}`)
+      .attr('x', n => width < 600 ? 0 : radius(n) + 9).attr('y', n => width < 600 ? -radius(n) - 9 : 4)
+      .attr('text-anchor', width < 600 ? 'middle' : 'start').attr('fill', n => ghost(n) ? '#9b988e' : '#c9c5bc')
+      .attr('font-size', width < 600 ? 11 : 12).attr('font-style', n => ghost(n) ? 'italic' : 'normal');
+    node.append('title').text(n => n.title);
+    const highlight = (id?: string | null) => {
+      const related = id ? neighbors.get(id) : null;
+      node.attr('opacity', n => !related || related.has(n.id) ? 1 : .24);
+      node.select('.node-outline').attr('stroke-width', n => n.id === id ? 2.5 : 1);
+      lines.attr('stroke-opacity', e => !id ? .24 : endpoint(e.source) === id || endpoint(e.target) === id ? .85 : .07)
+        .attr('stroke-width', e => id && (endpoint(e.source) === id || endpoint(e.target) === id) ? 1.5 : 1);
+    };
+    emphasize.current = highlight;
+    node.on('pointerenter', (_, n) => highlight(n.id)).on('pointerleave', () => highlight(selection.current))
+      .on('focus', (_, n) => highlight(n.id)).on('blur', () => highlight(selection.current))
+      .on('click', (e, n) => { if (!e.defaultPrevented && !ghost(n)) action.current(n.id); })
+      .on('keydown', (e: KeyboardEvent, n) => {
+        if ((e.key === 'Enter' || e.key === ' ') && !ghost(n)) { e.preventDefault(); action.current(n.id); }
       });
-      node.select('text').attr('fill-opacity', (candidate) => {
-        if (candidate.id === selected.id) return 1;
-        return links.some((edge) => (endpointId(edge.source) === selected.id && endpointId(edge.target) === candidate.id) || (endpointId(edge.target) === selected.id && endpointId(edge.source) === candidate.id)) ? 1 : 0.15;
+    const draw = () => {
+      nodes.forEach(n => {
+        const padding = radius(n) + 48;
+        n.x = Math.max(padding, Math.min(width - padding, n.x ?? width / 2));
+        n.y = Math.max(padding + 24, Math.min(height - padding - 70, n.y ?? height / 2));
       });
-    });
-
-    node.on('mouseout', () => {
-      node.select('circle')
-        .attr('fill-opacity', (candidate) => isGhost(candidate) ? 0 : (isCategory(candidate) ? 0.85 : 0.7))
-        .attr('stroke', (candidate) => isGhost(candidate) ? 'rgba(200,149,108,0.35)' : (candidate.id === selectedNodeId ? 'rgba(212,165,116,0.6)' : 'transparent'));
-      node.select('text').attr('fill-opacity', 1);
-      link.attr('stroke', 'rgba(200,149,108,0.12)').attr('stroke-width', 1);
-    });
-
-    // Constrain nodes within SVG bounds to prevent clipping
-    const padding = 30;
-    sim.on('tick', () => {
-      nodes.forEach((simulationNode) => {
-        const radius = nodeRadius(simulationNode) + padding;
-        simulationNode.x = Math.max(radius, Math.min(width - radius, simulationNode.x ?? width / 2));
-        simulationNode.y = Math.max(radius, Math.min(height - radius, simulationNode.y ?? height / 2));
-      });
-      link
-        .attr('x1', (edge) => endpointNode(edge.source)?.x ?? 0)
-        .attr('y1', (edge) => endpointNode(edge.source)?.y ?? 0)
-        .attr('x2', (edge) => endpointNode(edge.target)?.x ?? 0)
-        .attr('y2', (edge) => endpointNode(edge.target)?.y ?? 0);
-      node.attr('transform', (simulationNode) => `translate(${simulationNode.x ?? 0},${simulationNode.y ?? 0})`);
-    });
-
-    return () => { sim.stop(); };
-  }, [data, stableClick, selectedNodeId, dimensions, sizing, isMobile]);
-
-  const noteCount = data.nodes.filter((n) => n.kind !== 'ghost' && n.kind !== 'category').length;
-  const catCount = data.nodes.filter((n) => n.kind === 'category').length;
-
-  return (
-    <div ref={containerRef} className="w-full h-full relative">
-      <svg ref={svgRef} className="w-full h-full" style={{ touchAction: 'none' }} />
-
-      {/* Breadcrumb / drill-down context */}
-      <div className="absolute top-4 left-4 z-10 text-xs">
-        {scope ? (
-          <span className="liquid-glass rounded-lg px-3 py-1.5 inline-flex items-center gap-1.5">
-            <button onClick={onBack} className="relative z-10 text-[#888] hover:text-[#ddd] transition-colors">
-              ← {graphConfig.backToOverviewLabel}
-            </button>
-            <span className="relative z-10 text-[#444]">/</span>
-            <span className="relative z-10 text-[#bbb]">{scope}</span>
-          </span>
-        ) : (
-          <span className="text-[#555] font-serif-cn">{graphConfig.overviewHint}</span>
-        )}
-      </div>
-
-      <div className="liquid-glass absolute bottom-10 left-4 rounded-xl px-4 py-2.5 w-fit">
-        <div className="relative z-10 text-xs text-[#666] space-y-0.5">
-          {scope ? (
-            <div><span className="text-[#999]">{noteCount}</span> {graphConfig.notesLabel} · <span className="text-[#999]">{data.edges.length}</span> {graphConfig.connectionsLabel}</div>
-          ) : (
-            <div><span className="text-[#999]">{catCount}</span> {graphConfig.categoriesLabel}</div>
-          )}
-        </div>
-      </div>
-
-      {data.nodes.length === 0 && (
-        <div className="absolute inset-0 flex items-center justify-center text-[#333] text-sm">{graphConfig.emptyGraphLabel}</div>
-      )}
-    </div>
-  );
+      lines.attr('x1', e => (e.source as Node).x ?? 0).attr('y1', e => (e.source as Node).y ?? 0)
+        .attr('x2', e => (e.target as Node).x ?? 0).attr('y2', e => (e.target as Node).y ?? 0);
+      node.attr('transform', n => `translate(${n.x},${n.y})`);
+    };
+    node.call(d3.drag<SVGGElement, Node>().on('start', e => {
+      if (!reduced && !e.active) simulation.alphaTarget(.2).restart();
+      e.subject.fx = e.subject.x; e.subject.fy = e.subject.y;
+    }).on('drag', e => {
+      e.subject.fx = e.x; e.subject.fy = e.y;
+      if (reduced) { e.subject.x = e.x; e.subject.y = e.y; draw(); }
+    }).on('end', e => {
+      if (!e.active) simulation.alphaTarget(0);
+      if (!reduced) { e.subject.fx = null; e.subject.fy = null; }
+    }));
+    simulation.on('tick', draw).on('end', () => simulation.stop());
+    if (reduced) simulation.stop().tick(180);
+    draw(); highlight(selection.current);
+    const visibility = () => {
+      if (document.hidden) simulation.stop();
+      else if (!reduced && simulation.alpha() > simulation.alphaMin()) simulation.restart();
+    };
+    document.addEventListener('visibilitychange', visibility); visibility();
+    return () => {
+      simulation.stop(); svg.interrupt(); svg.on('.zoom', null); node.on('.drag', null);
+      document.removeEventListener('visibilitychange', visibility);
+      emphasize.current = () => {}; controls.current = () => {}; svg.selectAll('*').remove();
+    };
+  }, [data, dimensions, reduced]);
+  const noteCount = data.nodes.filter(n => !ghost(n) && !category(n)).length;
+  return <div ref={containerRef} className="graph-workspace w-full h-full relative">
+    <svg ref={svgRef} className="w-full h-full" role="group" aria-label="笔记关系图，可拖动、缩放或使用下方列表" style={{ touchAction: 'none' }} />
+    <div className="graph-breadcrumb">{scope ? <><button onClick={onBack}>← {graphConfig.backToOverviewLabel}</button><span> / {scope}</span></> : graphConfig.overviewHint}</div>
+    <div className="graph-zoom" aria-label="图谱缩放"><button onClick={() => controls.current(1.25)} aria-label="放大图谱">+</button><button onClick={() => controls.current(.8)} aria-label="缩小图谱">−</button><button onClick={() => controls.current(null)} aria-label="重置图谱视图">↺</button></div>
+    <details className="graph-list"><summary>可访问列表 · {data.nodes.length} 个节点</summary><ul>
+      {data.nodes.map(n => <li key={n.id}>{ghost(n) ? <span>{n.title} <small>未解析</small></span> : <button onClick={() => onNodeClick(n.id)} onFocus={() => emphasize.current(n.id)} onBlur={() => emphasize.current(selectedNodeId)}>{n.title}{category(n) && <small>{n.count} 篇</small>}</button>}</li>)}
+    </ul></details>
+    <p className="graph-legend">◎ 分类 · ● 笔记 · ◌ 未解析 <span>{scope ? `${noteCount} ${graphConfig.notesLabel} · ${data.edges.length} ${graphConfig.connectionsLabel}` : `${data.nodes.filter(category).length} ${graphConfig.categoriesLabel}`}</span></p>
+    {data.nodes.length === 0 && <div className="graph-empty">{graphConfig.emptyGraphLabel}</div>}
+  </div>;
 }

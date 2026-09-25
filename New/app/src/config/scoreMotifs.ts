@@ -97,10 +97,10 @@ export const scoreMotifs: Record<ScorePiece, ScoreMotif> = {
     opacity: 0.15,
     fragments: [
       fragment('etude', 'a', 'top-right', '3.893',
-        { top: '-8%', right: '-6%', width: '42%' },
+        { top: '1%', right: '-3%', width: '38%' },
         { top: '-4%', right: '-14%', width: '88%' }),
       fragment('etude', 'b', 'bottom-left', '4.380',
-        { bottom: '-10%', left: '-6%', width: '42%' },
+        { bottom: '1%', left: '-3%', width: '38%' },
         { bottom: '-7%', left: '-14%', width: '88%' }),
     ],
   },

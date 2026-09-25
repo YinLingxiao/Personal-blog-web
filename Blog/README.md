@@ -15,7 +15,7 @@ npm run preview
 
 - 开发地址：`http://localhost:3000/blog/`
 - 构建输出：`Blog/dist/`
-- 内容目录：`Opus/posts/`
+- 内容目录：`Opus/posts/`（可用 `BLOG_CONTENT_ROOT` 指向服务器持久化绝对路径）
 
 ## Content pipeline
 
@@ -28,6 +28,6 @@ npm run preview
 
 以上生成文件与 `dist/` 均不提交到仓库，`npm run generate`、`npm run dev`、`npm run check` 和 `npm run build` 会按需重建。
 
-博客支持 Markdown、KaTeX、`[[wiki link]]`、分类筛选和全文搜索。内容规范见 `Opus/CLAUDE.md`。
+博客支持 Markdown、KaTeX、`[[wiki link]]`、分类筛选和全文搜索。内容规范见 `Opus/CLAUDE.md`。超管可从 `/blog/admin/upload` 保存一个新的 page bundle；该操作只写入源目录，不覆盖同 slug 内容，也不自动构建或部署。
 
 `npm run quality` 会依次执行 ESLint、TypeScript、Vitest 和生产构建。Blog 内部使用 `Post` 数据模型，公开文章路径与 `/blog/latest.json` 契约保持稳定。

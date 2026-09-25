@@ -1,6 +1,7 @@
+import { useMotionPolicy } from '@/components/motion/motion';
+import MotionControls from '@/components/motion/MotionControls';
 import { useState, useEffect, useMemo, useCallback, lazy, Suspense } from 'react';
 import { Link, useParams, useNavigate, useLocation, useSearchParams } from 'react-router';
-import type { ViewMode } from '@/types';
 import { buildGraphData, buildCategoryGraph, resolveLink } from '@/utils/linkParser';
 import {
   appConfig,
@@ -10,6 +11,7 @@ import {
 } from '@/config';
 import Sidebar from '@/components/Sidebar';
 import NoteBrandHome from '@/components/NoteBrandHome';
+import AuthMenu from '@/components/AuthMenu';
 import { useNotes } from '@/hooks/useNotes';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -24,6 +26,7 @@ const BG_KEY = 'template-03-bg';
 const BG_COLOR_KEY = 'template-03-bg-color';
 
 export default function NoteLayout() {
+  const { reduced } = useMotionPolicy();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const location = useLocation();
@@ -33,18 +36,35 @@ export default function NoteLayout() {
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const selectedId = id ?? null;
-  const [viewMode, setViewMode] = useState<ViewMode>(() => location.pathname.endsWith('/graph') ? 'graph' : 'editor');
+  const viewMode = location.pathname.endsWith('/graph') ? 'graph' : 'editor';
   const [search, setSearch] = useState('');
   const [bg, setBg] = useState<BgMode>(() => {
-    const saved = localStorage.getItem(BG_KEY);
+    let saved: string | null = null;
+    try { saved = localStorage.getItem(BG_KEY); } catch { void 0; }
     if (saved === 'black') return 'solid';
     return (saved as BgMode) || backgroundConfig.defaultMode;
   });
-  const [bgColor, setBgColor] = useState(() => localStorage.getItem(BG_COLOR_KEY) || backgroundConfig.defaultSolidColor);
+  const [bgColor, setBgColor] = useState(() => { try { return localStorage.getItem(BG_COLOR_KEY) || backgroundConfig.defaultSolidColor; } catch { return backgroundConfig.defaultSolidColor; } });
   const [showBgMenu, setShowBgMenu] = useState(false);
+  useEffect(() => {
+    if (!showBgMenu) return;
+    const previous = document.activeElement as HTMLElement | null;
+    const menu = document.getElementById('note-appearance');
+    const buttons = menu?.querySelectorAll<HTMLButtonElement>('button:not(:disabled)');
+    buttons?.[0]?.focus();
+    const key = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') { e.preventDefault(); setShowBgMenu(false); }
+      if (e.key !== 'Tab' || !buttons?.length) return;
+      const first = buttons[0], last = buttons[buttons.length - 1];
+      if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+      else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+    };
+    menu?.addEventListener('keydown', key);
+    return () => { menu?.removeEventListener('keydown', key); previous?.focus(); };
+  }, [showBgMenu]);
 
-  useEffect(() => { localStorage.setItem(BG_KEY, bg); }, [bg]);
-  useEffect(() => { localStorage.setItem(BG_COLOR_KEY, bgColor); }, [bgColor]);
+  useEffect(() => { try { localStorage.setItem(BG_KEY, bg); } catch { void 0; } }, [bg]);
+  useEffect(() => { try { localStorage.setItem(BG_COLOR_KEY, bgColor); } catch { void 0; } }, [bgColor]);
   useEffect(() => {
     document.title = siteConfig.title;
     document.documentElement.lang = siteConfig.language;
@@ -59,34 +79,31 @@ export default function NoteLayout() {
     if (id.startsWith('cat:')) { setSearchParams({ cat: id.slice(4) }); return; }
     if (id.startsWith('ghost:')) return;
     navigate(`/post/${id}`);
-    setViewMode('editor');
   }, [navigate, setSearchParams]);
 
   const handleNavigate = useCallback((title: string) => {
     const found = resolveLink(title, notes);
     if (found) {
       navigate(`/post/${found.id}`);
-      setViewMode('editor');
-    }
+      }
   }, [notes, navigate]);
 
   const handleSelect = useCallback((noteId: string) => {
     navigate(`/post/${noteId}`);
-    setViewMode('editor');
     setDrawerOpen(false); // collapse the mobile drawer after picking an article
   }, [navigate]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={bg === 'solid' ? { backgroundColor: bgColor } : undefined}>
-      <Suspense fallback={null}>
-        {bg === 'silk' && <SilkCascade />}
-        {bg === 'moonlit' && <MoonlitRipple />}
-        {bg === 'rain' && <RainOnGlass />}
-      </Suspense>
+    <div className="h-screen flex flex-col overflow-hidden" style={bg === 'solid' || reduced ? { backgroundColor: bgColor } : undefined}>
+      <div className="note-atmosphere" data-reading={viewMode === 'editor'}><Suspense fallback={null}>
+        {!reduced && bg === 'silk' && <SilkCascade />}
+        {!reduced && bg === 'moonlit' && <MoonlitRipple />}
+        {!reduced && bg === 'rain' && <RainOnGlass />}
+      </Suspense></div>
 
       <div className="relative z-10 h-full flex flex-col">
         {/* Header */}
-        <header className="liquid-glass h-11 shrink-0 flex items-center justify-between px-4">
+        <header className="note-toolbar liquid-glass h-11 shrink-0 flex items-center justify-between px-4">
           <div className="relative z-10 flex items-center gap-3">
             {isMobile && (
               <button
@@ -100,12 +117,24 @@ export default function NoteLayout() {
               </button>
             )}
             <NoteBrandHome />
+            {/* 主页与博文之前只能单向到达笔记，这里补上回博文的一段，让三处互通。 */}
+            <a
+              href={headerConfig.blogUrl}
+              className="font-serif-cn pl-3 text-xs text-[#666] hover:text-[#ccc] transition-colors border-l border-white/[0.06]"
+              title={headerConfig.blogButtonTitle}
+            >
+              {headerConfig.blogButtonLabel}
+            </a>
           </div>
-          <div className="relative z-10 flex items-center gap-1">
+          <div className="note-toolbar__actions relative z-10 flex items-center gap-1">
             {(['editor', 'graph'] as const).map((m) => (
               <button
                 key={m}
-                onClick={() => setViewMode(m)}
+                onClick={() => {
+                  if (m === 'graph') navigate('/graph', { state: { noteId: selectedId } });
+                  else { const destination = selectedId || location.state?.noteId || notes[0]?.id; if (destination) navigate(`/post/${encodeURIComponent(destination)}`); }
+                }}
+                aria-pressed={viewMode === m}
                 className={`font-serif-cn px-3 py-1.5 text-xs rounded-md transition-colors ${
                   viewMode === m ? 'text-[#e0e0e0] bg-white/[0.06]' : 'text-[#555] hover:text-[#999]'
                 }`}
@@ -118,9 +147,13 @@ export default function NoteLayout() {
               onClick={() => setShowBgMenu(!showBgMenu)}
               className="ml-1 px-2.5 py-1.5 text-xs text-[#444] hover:text-[#888] transition-colors"
               title={headerConfig.backgroundButtonTitle}
+              aria-label={headerConfig.backgroundButtonTitle}
+              aria-expanded={showBgMenu}
             >
               &#9680;
             </button>
+
+            <AuthMenu compact />
 
             <Link
               to="/"
@@ -147,7 +180,7 @@ export default function NoteLayout() {
             onClose={() => setDrawerOpen(false)}
           />
 
-          <main className="flex-1 overflow-hidden">
+          <main className="flex-1 min-w-0 overflow-hidden" inert={isMobile && drawerOpen}>
             <Suspense fallback={null}>
               {viewMode === 'editor' && selectedNote ? (
                 <NoteEditor
@@ -175,7 +208,8 @@ export default function NoteLayout() {
       {showBgMenu && (
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowBgMenu(false)} />
-          <div className="fixed right-4 top-10 z-50 bg-[#111] border border-white/[0.06] rounded-lg py-1 min-w-[120px] shadow-2xl">
+          <div id="note-appearance" role="dialog" aria-modal="true" aria-label="背景与动效" className="fixed right-4 top-14 z-[60] bg-[#111] border border-white/[0.06] rounded-lg py-1 min-w-[120px] shadow-2xl">
+            <div className="note-motion-control"><MotionControls /></div>
             {backgroundConfig.options.map((opt) => (
               <button
                 key={opt.id}

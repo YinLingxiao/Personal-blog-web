@@ -1,0 +1,23 @@
+[
+  {
+    "name": "Lexica.",
+    "description": "A dictionary build by Rust",
+    "language": "Rust",
+    "stars": 0,
+    "url": "https://github.com/YinLingxiao/Lexica."
+  },
+  {
+    "name": "Personal-blog-web",
+    "description": "A web contain my blogs and notes.",
+    "language": "TypeScript",
+    "stars": 0,
+    "url": "https://github.com/YinLingxiao/Personal-blog-web"
+  },
+  {
+    "name": "Video-downloader",
+    "description": "A video downloader that can downloader videos from Bilibili and Youtube",
+    "language": "CSS",
+    "stars": 0,
+    "url": "https://github.com/YinLingxiao/Video-downloader"
+  }
+]

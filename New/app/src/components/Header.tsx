@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import BrandSignature from './BrandSignature';
+import BrandMark from './brand/BrandMark';
 import MobileMenu from './MobileMenu';
+import AuthMenu from './AuthMenu';
 import { scrollToSection, startScroll, stopScroll } from '@/hooks/useSmoothScroll';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -18,6 +20,8 @@ const NAV_LINKS = [
 const Header: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
+  const [active, setActive] = useState('');
+  const closeMenu = useCallback(() => setMenuOpen(false), []);
   const lockYRef = useRef(0);
 
   useEffect(() => {
@@ -32,13 +36,32 @@ const Header: React.FC = () => {
   }, []);
 
   useEffect(() => {
+    const sections = NAV_LINKS.map(link => document.querySelector<HTMLElement>(link.href));
+    let frame = 0;
+    const update = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(() => {
+        const section = sections.filter(el => el && el.getBoundingClientRect().top <= innerHeight * .42).at(-1);
+        setActive(section ? `#${section.id}` : '');
+      });
+    };
+    update(); window.addEventListener('scroll', update, { passive: true });
+    return () => { cancelAnimationFrame(frame); window.removeEventListener('scroll', update); };
+  }, []);
+
+  useEffect(() => {
     const body = document.body;
+    if (!menuOpen) return;
+    const main = document.querySelector('main');
+    if (main) main.inert = true;
     const restore = () => {
       body.style.position = '';
       body.style.top = '';
       body.style.left = '';
       body.style.width = '';
       startScroll();
+      if (main) main.inert = false;
+      window.scrollTo(0, lockYRef.current);
     };
 
     if (menuOpen) {
@@ -48,14 +71,12 @@ const Header: React.FC = () => {
       body.style.top = `-${lockYRef.current}px`;
       body.style.left = '0';
       body.style.width = '100%';
-    } else {
-      restore();
-      window.scrollTo(0, lockYRef.current);
     }
     return restore;
   }, [menuOpen]);
 
   const handleNavClick = useCallback((e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
+    if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     if (href.startsWith('#')) {
       e.preventDefault();
       setMenuOpen(false);
@@ -82,70 +103,64 @@ const Header: React.FC = () => {
           <a
             href="#"
             onClick={(e) => {
+              if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
               e.preventDefault();
               scrollToSection(0);
             }}
-            className="brand-link flex items-center gap-3 group"
+            className="brand-link flex items-center gap-4 group"
           >
             <BrandSignature className="h-[1.9rem] w-auto" />
-            <span className="w-[1px] h-5" style={{ backgroundColor: 'var(--border)' }} />
-            <span
-              className="text-[0.75rem] mt-[2px]"
-              style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}
-            >
-              墨浅
-            </span>
+            <BrandMark className="h-9 md:h-10" />
           </a>
 
-          {/* Desktop Nav */}
-          <nav className="hidden md:flex items-center gap-8">
-            {NAV_LINKS.map((link) => (
-              <a
-                key={link.href}
-                href={link.href}
-                onClick={(e) => handleNavClick(e, link.href)}
-                className="group relative text-[0.75rem] tracking-[0.05em] transition-colors duration-300 hover:text-[var(--fg)]"
-                style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
-              >
-                <span className="text-[var(--fg-dim)]">{link.num}</span>{' '}
-                <span>{link.label}</span>
-                <span
-                  className="absolute bottom-[-4px] left-0 h-[1px] bg-[var(--fg)] transition-all duration-500 ease-out w-0 group-hover:w-full"
-                  style={{ transformOrigin: 'left' }}
-                />
-              </a>
-            ))}
-          </nav>
+          <div className="flex items-center gap-4 md:gap-7">
+            <nav className="hidden md:flex items-center gap-8">
+              {NAV_LINKS.map((link) => (
+                <a
+                  key={link.href}
+                  href={link.href}
+                  aria-current={active === link.href ? 'location' : undefined}
+                  onClick={(e) => handleNavClick(e, link.href)}
+                  className="group relative text-[0.75rem] tracking-[0.05em] transition-colors duration-300 hover:text-[var(--fg)]"
+                  style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
+                >
+                  <span className="text-[var(--fg-dim)]">{link.num}</span>{' '}
+                  <span>{link.label}</span>
+                  <span
+                    className="absolute bottom-[-4px] left-0 h-[1px] bg-[var(--fg)] transition-all duration-500 ease-out w-0 group-hover:w-full"
+                    style={{ transformOrigin: 'left' }}
+                  />
+                </a>
+              ))}
+            </nav>
 
-          {/* Mobile Hamburger */}
-          <button
-            className="md:hidden flex flex-col items-center justify-center w-8 h-8 gap-[5px]"
-            onClick={() => setMenuOpen(!menuOpen)}
-            aria-label="Toggle menu"
-          >
-            <span
-              className="block w-5 h-[1px] bg-[var(--fg-muted)] transition-all duration-300"
-              style={{
-                transform: menuOpen ? 'rotate(45deg) translate(2px, 2px)' : 'none',
-              }}
-            />
-            <span
-              className="block w-5 h-[1px] bg-[var(--fg-muted)] transition-all duration-300"
-              style={{
-                opacity: menuOpen ? 0 : 1,
-              }}
-            />
-            <span
-              className="block w-5 h-[1px] bg-[var(--fg-muted)] transition-all duration-300"
-              style={{
-                transform: menuOpen ? 'rotate(-45deg) translate(2px, -2px)' : 'none',
-              }}
-            />
-          </button>
+            <AuthMenu />
+
+            <button
+              className="md:hidden flex flex-col items-center justify-center w-8 h-8 gap-[5px]"
+              onClick={() => setMenuOpen(!menuOpen)}
+              aria-label="Toggle menu"
+              aria-expanded={menuOpen}
+              aria-controls="mobile-navigation"
+            >
+              <span
+                className="block w-5 h-[1px] bg-[var(--fg-muted)] transition-all duration-300"
+                style={{ transform: menuOpen ? 'rotate(45deg) translate(2px, 2px)' : 'none' }}
+              />
+              <span
+                className="block w-5 h-[1px] bg-[var(--fg-muted)] transition-all duration-300"
+                style={{ opacity: menuOpen ? 0 : 1 }}
+              />
+              <span
+                className="block w-5 h-[1px] bg-[var(--fg-muted)] transition-all duration-300"
+                style={{ transform: menuOpen ? 'rotate(-45deg) translate(2px, -2px)' : 'none' }}
+              />
+            </button>
+          </div>
         </div>
       </header>
 
-      <MobileMenu isOpen={menuOpen} onClose={() => setMenuOpen(false)} links={NAV_LINKS} />
+      <MobileMenu isOpen={menuOpen} onClose={closeMenu} links={NAV_LINKS} />
     </>
   );
 };

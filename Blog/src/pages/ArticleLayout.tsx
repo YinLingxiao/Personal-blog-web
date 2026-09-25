@@ -2,6 +2,7 @@ import { useEffect, useMemo, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router';
 import { siteConfig } from '@/config';
 import BlogBrandHome from '@/components/BlogBrandHome';
+import AuthMenu from '@/components/AuthMenu';
 import PostReader from '@/components/PostReader';
 import { usePosts } from '@/hooks/usePosts';
 import { resolveLink } from '@/utils/linkParser';
@@ -43,18 +44,21 @@ export default function ArticleLayout() {
   );
 
   return (
-    <div className="min-h-screen bg-[#050505] text-[#e5e5e5]">
+    <div className="min-h-screen text-[#e5e5e5]">
       <header className="border-b border-[#1a1a1a]">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
           <BlogBrandHome />
-          <Link
-            to="/"
-            className="group flex items-center gap-2 text-[0.75rem] tracking-[0.05em] text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors"
-            style={{ fontFamily: 'var(--font-sans)' }}
-          >
-            博客首页
-            <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link
+              to="/"
+              className="group flex items-center gap-2 text-[0.75rem] tracking-[0.05em] text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors"
+              style={{ fontFamily: 'var(--font-sans)' }}
+            >
+              博客首页
+              <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
+            </Link>
+            <AuthMenu />
+          </div>
         </div>
       </header>
 

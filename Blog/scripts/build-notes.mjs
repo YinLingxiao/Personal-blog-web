@@ -5,12 +5,80 @@ import { fileURLToPath } from 'node:url';
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const ROOT = resolve(__dirname, '..');
 
-const PROFILE = { contentDir: '../Opus/posts', urlBase: '/blog', emitLatest: true };
+const PROFILE = {
+  contentDir: process.env.BLOG_CONTENT_ROOT || '../Opus/posts',
+  urlBase: '/blog',
+  emitLatest: true,
+  feed: {
+    origin: process.env.BLOG_SITE_ORIGIN || 'https://moqian.me',
+    title: '墨浅博文',
+    description: '于浅墨之间，写一点不急的字。个人随笔与技术札记的存放处。',
+    language: 'zh-CN',
+    max: 20,
+  },
+};
 
 const OPUS_POSTS = resolve(ROOT, PROFILE.contentDir);
 const OUT_POSTS = resolve(ROOT, 'src/generated/posts.json');
 const OUT_PUBLIC_POSTS = resolve(ROOT, 'public/posts');
 const OUT_LATEST = resolve(ROOT, 'public/latest.json');
+const OUT_RSS = resolve(ROOT, 'public/rss.xml');
+
+function escapeXml(value) {
+  return String(value)
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&apos;');
+}
+
+// Markdown 摘要仅用于 RSS description：去掉代码块、公式、图片与行内标记，保留可读句子。
+function plainExcerpt(markdown, limit = 220) {
+  const text = markdown
+    .replace(/```[\s\S]*?```/g, ' ')
+    .replace(/\$\$[\s\S]*?\$\$/g, ' ')
+    .replace(/\$[^$\n]*\$/g, ' ')
+    .replace(/!\[[^\]]*\]\([^)]*\)/g, ' ')
+    .replace(/\[\[([^\]|]+)(\|[^\]]+)?\]\]/g, '$1')
+    .replace(/\[([^\]]*)\]\([^)]*\)/g, '$1')
+    .replace(/^\s{0,3}#{1,6}\s+/gm, '')
+    .replace(/^\s{0,3}>\s?/gm, '')
+    .replace(/[*_`~]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return text.length > limit ? `${text.slice(0, limit)}…` : text;
+}
+
+function buildRss({ items, feed, urlBase, feedPath }) {
+  const site = `${feed.origin}${urlBase}/`;
+  const self = `${feed.origin}${feedPath}`;
+  const entries = items.map((item) => {
+    const link = `${feed.origin}${item.path}`;
+    const category = item.category ? `\n      <category>${escapeXml(item.category)}</category>` : '';
+    return `    <item>
+      <title>${escapeXml(item.title)}</title>
+      <link>${escapeXml(link)}</link>
+      <guid isPermaLink="true">${escapeXml(link)}</guid>
+      <pubDate>${new Date(item.timestamp).toUTCString()}</pubDate>${category}
+      <description>${escapeXml(item.description)}</description>
+    </item>`;
+  });
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>${escapeXml(feed.title)}</title>
+    <link>${escapeXml(site)}</link>
+    <description>${escapeXml(feed.description)}</description>
+    <language>${escapeXml(feed.language)}</language>
+    <lastBuildDate>${new Date(items[0]?.timestamp ?? Date.now()).toUTCString()}</lastBuildDate>
+    <atom:link href="${escapeXml(self)}" rel="self" type="application/rss+xml" />
+${entries.join('\n')}
+  </channel>
+</rss>
+`;
+}
 
 function parseFrontmatter(raw) {
   raw = raw.replace(/\r\n?/g, '\n'); // normalize CRLF/CR → LF (Obsidian on Windows often saves CRLF)
@@ -295,6 +363,22 @@ function build() {
     writeFileSync(OUT_LATEST, JSON.stringify(latest, null, 2), 'utf8');
     console.log(`[build-notes] wrote latest.json → ${relative(ROOT, OUT_LATEST)}`);
   }
+
+  const feedItems = generatedPosts.slice(0, PROFILE.feed.max).map((post) => ({
+    title: post.title,
+    path: `${PROFILE.urlBase}/post/${post.id}`,
+    timestamp: post.updatedAt,
+    category: post.category,
+    description: post.summary || plainExcerpt(post.content),
+  }));
+  mkdirSync(dirname(OUT_RSS), { recursive: true });
+  writeFileSync(OUT_RSS, buildRss({
+    items: feedItems,
+    feed: PROFILE.feed,
+    urlBase: PROFILE.urlBase,
+    feedPath: `${PROFILE.urlBase}/rss.xml`,
+  }), 'utf8');
+  console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
 }
 
 build();

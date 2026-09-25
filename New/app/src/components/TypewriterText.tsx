@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useReducedMotion, useIsMobile } from '@/hooks/useMediaQuery';
 
 interface TypewriterTextProps {
@@ -18,49 +18,35 @@ const TypewriterText: React.FC<TypewriterTextProps> = ({
   onComplete,
   enabled = true,
 }) => {
-  const [displayed, setDisplayed] = useState('');
-  const [done, setDone] = useState(false);
-  const indexRef = useRef(0);
-  const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
+  const [typing, setTyping] = useState({ text, progress: 0 });
   const reducedMotion = useReducedMotion();
   const isMobile = useIsMobile();
+  const skipAnimation = isMobile || reducedMotion;
+  const progress = typing.text === text ? typing.progress : 0;
+  const done = skipAnimation || progress >= text.length;
+  const displayed = skipAnimation ? text : text.slice(0, progress);
 
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled || skipAnimation || text.length === 0) return;
 
-    // Skip animation on mobile or reduced motion preference
-    if (isMobile || reducedMotion) {
-      setDisplayed(text);
-      setDone(true);
-      onComplete?.();
-      return;
-    }
-
-    indexRef.current = 0;
-    setDisplayed('');
-    setDone(false);
-
-    intervalRef.current = setInterval(() => {
-      indexRef.current += 1;
-      if (indexRef.current >= text.length) {
-        setDisplayed(text);
-        setDone(true);
-        if (intervalRef.current) clearInterval(intervalRef.current);
-        onComplete?.();
-      } else {
-        setDisplayed(text.slice(0, indexRef.current));
-      }
+    let index = 0;
+    const interval = setInterval(() => {
+      index = Math.min(index + 1, text.length);
+      setTyping({ text, progress: index });
+      if (index === text.length) clearInterval(interval);
     }, speed);
 
-    return () => {
-      if (intervalRef.current) clearInterval(intervalRef.current);
-    };
-  }, [text, speed, enabled, onComplete, isMobile, reducedMotion]);
+    return () => clearInterval(interval);
+  }, [text, speed, enabled, skipAnimation]);
+
+  useEffect(() => {
+    if (enabled && done) onComplete?.();
+  }, [enabled, done, onComplete]);
 
   return (
     <span className={className} style={style}>
       {displayed}
-      {!done && enabled && !isMobile && !reducedMotion && (
+      {!done && enabled && (
         <span className="inline-block w-[2px] h-[1em] bg-[var(--fg)] ml-[1px] animate-pulse align-middle" />
       )}
     </span>
