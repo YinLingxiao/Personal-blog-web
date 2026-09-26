@@ -6,7 +6,7 @@ const root = fileURLToPath(new URL('../', import.meta.url));
 for (const project of ['New/app', 'Blog', 'Note']) {
   const dest = path.join(root, project, 'src/components/motion');
   if (!process.argv.includes('--check')) await mkdir(dest, { recursive: true });
-  for (const file of ['motion.ts', 'MotionControls.tsx', 'motion.css', 'CustomCursor.tsx']) {
+  for (const file of ['motion.ts', 'MotionControls.tsx', 'motion.css', 'CustomCursor.tsx', 'useCustomCursor.ts']) {
     const source = await readFile(path.join(root, 'shared/motion', file));
     const target = path.join(dest, file);
     if (process.argv.includes('--check')) {

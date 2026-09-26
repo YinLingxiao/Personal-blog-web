@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "generate": "node scripts/build-notes.mjs",
-    "dev": "node ../scripts/sync-motion.mjs && node ../scripts/sync-brand.mjs && npm run generate && vite",
-    "build": "node ../scripts/sync-motion.mjs && node ../scripts/sync-brand.mjs && npm run generate && tsc -b && vite build",
+    "dev": "node ../scripts/sync-account.mjs && node ../scripts/sync-motion.mjs && node ../scripts/sync-brand.mjs && npm run generate && vite",
+    "build": "node ../scripts/sync-account.mjs && node ../scripts/sync-motion.mjs && node ../scripts/sync-brand.mjs && npm run generate && tsc -b && vite build",
     "lint": "eslint .",
     "test": "vitest run",
     "quality": "npm run lint && npm run check && npm run test && npm run build",

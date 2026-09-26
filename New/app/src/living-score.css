@@ -34,3 +34,12 @@ html[data-motion=reduced] :is(.moon-caption>span,.moon-fallback>*,.moon-toggle){
 
 .home-atmosphere{opacity:.48}
 @media(max-width:767px){#now .now-portrait{width:180px;height:184px}.knowledge-constellation{display:none}}
+
+.lunar-score{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;opacity:0}
+.moon-art[data-ready=true] .lunar-score{opacity:var(--score-fade,0)}
+.lunar-score-staff path{stroke-dasharray:1 1;stroke-dashoffset:calc(1 - var(--score-staff,0))}
+.lunar-score-clef{opacity:var(--score-clef,0);transform:translateY(var(--score-clef-rise,34px))}
+.lunar-score-stem{stroke-dasharray:1 1}
+.lunar-score-glint{transform:translateX(var(--score-glint-x,0));opacity:var(--score-glint-opacity,0)}
+.moon-orbits{transition:opacity 700ms ease}
+.moon-art[data-mode=score] .moon-orbits{opacity:.1}

@@ -80,7 +80,8 @@ function sceneEnvironment(mobile = false, arrival = true, extra = {}) {
   };
   const host = Object.assign(new EventTarget(), { dataset: {}, appendChild() {}, getBoundingClientRect: () => ({ width: 700, height: 600, left: 0, top: 0 }) });
   const galaxy = load('../src/graphics/galaxyField.ts', () => ({}), {});
-  const { createMoon } = load('../src/graphics/livingMoon.ts', name => name === './galaxyField' ? galaxy : three, {
+  const score = load('../src/graphics/scoreField.ts', () => ({}), {});
+  const { createMoon } = load('../src/graphics/livingMoon.ts', name => name === './galaxyField' ? galaxy : name === './scoreField' ? score : three, {
     devicePixelRatio: 3,
     document: { createElement: () => ({ getContext: () => ({ fillText() {} }) }) },
     requestAnimationFrame: fn => { frames.set(++nextFrame, fn); return nextFrame; }, cancelAnimationFrame: id => frames.delete(id),
@@ -108,6 +109,49 @@ test('mobile scene is lighter and a subsequent arrival starts settled', () => {
   assert.equal(records.renderers[0].dpr, 1); step();
   assert.equal(records.materials[0].uniforms.uArrival.value, 1); scene.dispose();
 });
+
+test('score transition field remains bounded at mobile and degraded particle budgets', () => {
+  const { scoreField } = load('../src/graphics/scoreField.ts', () => ({}), {});
+  const full = scoreField(2400);
+  assert.deepEqual([...scoreField(800)], [...full.subarray(0, 2400)]);
+  for (const count of [800, 1320, 2400]) {
+    for (let i = 0; i < count; i++) {
+      const [x, y, z] = full.subarray(i * 3, i * 3 + 3);
+      assert.ok(Number.isFinite(x + y + z));
+      assert.ok(Math.abs(x) <= 3.3 && Math.abs(y) < 1.2);
+    }
+  }
+});
+
+test('score holds an empty staff before symbols rise and reverses without a timer', () => {
+  const { scoreProgress } = load('../src/graphics/scoreProgress.ts', () => ({}), {});
+  const drawing = scoreProgress(.33);
+  assert.ok(drawing.staff > 0 && drawing.staff < 1);
+  for (const t of [.45, .5, .57]) {
+    const state = scoreProgress(t);
+    assert.equal(state.staff, 1);
+    assert.equal(state.clef, 0);
+    assert.equal(state.clefMotion.opacity, 0);
+    assert.ok(state.notes.every(n => n === 0));
+  }
+  const clefRising = scoreProgress(.63);
+  assert.ok(clefRising.clef > 0 && clefRising.clef < 1);
+  assert.ok(clefRising.clefMotion.offset > 0 && clefRising.clefMotion.offset < 34);
+  assert.ok(clefRising.notes.every(n => n === 0));
+  const rising = scoreProgress(.74);
+  assert.equal(rising.clef, 1);
+  assert.equal(rising.clefMotion.offset, 0);
+  assert.ok(rising.notes[0] > rising.notes[1]);
+  assert.equal(rising.notes[1], rising.notes[2]);
+  assert.ok(rising.noteMotion[0].stem > 0 && rising.noteMotion[0].stem < 1);
+  const settled = scoreProgress(.96);
+  assert.ok(settled.notes.every(n => n === 1));
+  assert.ok(settled.noteMotion.every(m => m.opacity === 1 && m.offset === 0 && m.stem === 1));
+  assert.equal(settled.fade, 1);
+  assert.equal(scoreProgress(1).fade, 0);
+  assert.deepEqual(scoreProgress(.74), rising);
+});
+
 test('sustained slow frames downgrade once and then retain the static fallback', () => {
   const { scene, records, step, frames, host, counts } = sceneEnvironment();
   for (let i = 0; i < 180; i++) step(60);

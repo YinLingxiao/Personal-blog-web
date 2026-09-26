@@ -4,7 +4,7 @@ import './living-score.css';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { useSmoothScroll } from '@/hooks/useSmoothScroll';
-import CustomCursor from '@/components/CustomCursor';
+import CustomCursor from '@/components/motion/CustomCursor';
 import Header from '@/components/Header';
 import ParticleBackground from '@/components/ParticleBackground';
 import HeroSection from '@/sections/HeroSection';

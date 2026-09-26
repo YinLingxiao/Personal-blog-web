@@ -1,5 +1,6 @@
 import { BufferAttribute, BufferGeometry, CanvasTexture, Color, PerspectiveCamera, Points, Scene, ShaderMaterial, Vector2, WebGLRenderer } from 'three';
 import { GALAXY_STRIDE, GALAXY_TILT, GALAXY_TWIST, galaxyField } from './galaxyField';
+import { scoreField } from './scoreField';
 
 export interface MoonScene {
   resize: () => void;
@@ -30,17 +31,16 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
   const camera = new PerspectiveCamera(42, 1, .1, 20);
   camera.position.z = 5;
   const count = options.mobile ? 800 : 2400;
-  const position = new Float32Array(count * 3), staff = new Float32Array(count * 3), seeds = new Float32Array(count);
+  const position = new Float32Array(count * 3), seeds = new Float32Array(count);
+  const score = scoreField(count);
   for (let i = 0; i < count; i++) {
     const y = 1 - (i + .5) / count * 2, r = Math.sqrt(1 - y * y), phi = i * Math.PI * (3 - Math.sqrt(5));
     position.set([Math.cos(phi) * r * 1.3, y * 1.3, Math.sin(phi) * r * 1.3], i * 3);
-    const x = ((i * 37 % count) / count - .5) * 6.3;
-    staff.set([x, ((i % 5) - 2) * .2 + Math.sin(x * .9) * .14, Math.cos(x) * .08], i * 3);
     seeds[i] = ((i * 127) % 997) / 997;
   }
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new BufferAttribute(position, 3));
-  geometry.setAttribute('staff', new BufferAttribute(staff, 3));
+  geometry.setAttribute('staff', new BufferAttribute(score, 3));
   geometry.setAttribute('seed', new BufferAttribute(seeds, 1));
   geometry.setAttribute('galaxy', new BufferAttribute(galaxyField(count), GALAXY_STRIDE));
   const atlas = document.createElement('canvas'); atlas.width = 128; atlas.height = 32;
@@ -54,6 +54,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
     uArrival: { value: options.arrival ? 0 : 1 }, uProgress: { value: 0 },
     uPointer: { value: new Vector2(5, 5) }, uDpr: { value: renderer.getPixelRatio() }, uAtlas: { value: texture },
     uGalaxy: { value: options.galaxy ? 1 : 0 }, uGather: { value: 0 }, uSpin: { value: 0 }, uRelease: { value: 0 },
+    uScoreScale: { value: 1 },
   };
   const material = new ShaderMaterial({ transparent: true, depthWrite: false, uniforms,
     vertexShader: `
@@ -67,9 +68,11 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
       uniform float uGather;
       uniform float uSpin;
       uniform float uRelease;
+      uniform float uScoreScale;
       uniform vec2 uPointer;
       varying float vLight;
       varying float vSeed;
+      varying float vSpread;
       varying float vAlpha;
       vec3 disk(vec3 q) {
         float cs = cos(uSpin), ss = sin(uSpin);
@@ -80,7 +83,9 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
         return vec3(cw * q.x - sw * q.y, sw * q.x + cw * q.y, q.z);
       }
       void main() {
-        float spread = smoothstep(.2, .8, uProgress);
+        float lane = clamp(staff.x / 6.4 + .5, 0., 1.);
+        float spread = smoothstep(0., 1., clamp((uProgress - .05 - lane * .17) / .2, 0., 1.));
+        float settle = clamp((uProgress - .3 - lane * .17) / .1, 0., 1.);
         float hold = 1. - smoothstep(.015, .2, uRelease);
         float g = smoothstep(0., 1., clamp(uGalaxy * 1.3 - seed * .3, 0., 1.)) * hold;
         vec3 p = position;
@@ -89,31 +94,36 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
         vec3 star = disk(galaxy.xyz);
         p = mix(p, star, g) * (1. - uGather * hold);
         p *= 1. + sin(min(uProgress, .2) * 7.85) * .06;
-        p = mix(p, staff, spread);
+        p = mix(p, staff * uScoreScale, spread);
+        float drift = sin(3.14159 * spread);
+        p.y += drift * (seed - .5) * .42;
+        p.z += drift * .25;
         vec2 delta = p.xy - uPointer;
         float influence = exp(-dot(delta, delta) * 5.) * (1. - spread);
         p.xy += delta * influence * .16;
         p.z += influence * .13;
         vec4 mv = modelViewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = (2.4 + seed * 3.4) * mix(1., .55 + galaxy.w * .6, g) * uDpr * (4. / -mv.z);
+        gl_PointSize = mix((2.4 + seed * 3.4) * mix(1., .55 + galaxy.w * .6, g), 2., spread) * uDpr * (4. / -mv.z);
         float moon = .24 + .76 * max(0., dot(normalize(position), normalize(vec3(-.6,.7,1.))));
-        vLight = mix(mix(moon, galaxy.w, g), .75, spread);
+        vLight = mix(mix(moon, galaxy.w, g), .55, spread);
         vSeed = seed;
-        vAlpha = (1. - smoothstep(.8, 1., uProgress)) * (.55 + .45 * uArrival) * mix(1., .62 + .38 * clamp(star.z * .6 + .5, 0., 1.), g);
+        vSpread = spread;
+        vAlpha = (1. - smoothstep(0., 1., settle)) * (.55 + .45 * uArrival) * mix(1., .62 + .38 * clamp(star.z * .6 + .5, 0., 1.), g);
       }
     `,
     fragmentShader: `
       uniform sampler2D uAtlas;
       varying float vLight;
       varying float vSeed;
+      varying float vSpread;
       varying float vAlpha;
       void main() {
         float d = length(gl_PointCoord - .5);
         float dotAlpha = 1. - smoothstep(.16, .5, d);
         vec2 uv = vec2((gl_PointCoord.x + floor(vSeed * 4.)) / 4., gl_PointCoord.y);
         float glyph = texture2D(uAtlas, uv).a;
-        float shape = mix(dotAlpha, glyph, step(.88, vSeed));
+        float shape = mix(dotAlpha, glyph, step(.88, vSeed) * (1. - vSpread));
         gl_FragColor = vec4(vec3(1., .975, .925) * vLight, shape * vAlpha);
       }
     `,
@@ -138,6 +148,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
     const { width, height } = host.getBoundingClientRect();
     if (!width || !height) return;
     renderer.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix();
+    uniforms.uScoreScale.value = Math.min(1, camera.aspect * 540 / 660) * Math.tan(21 * Math.PI / 180) * 10 / 5.4;
   };
   const fallback = () => { cancelAnimationFrame(frame); paused = true; options.onFallback(); };
   const render = (time: number) => {
@@ -146,8 +157,9 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
     active += dt; advance(dt);
     uniforms.uArrival.value = options.arrival ? Math.min(1, active / (options.mobile ? 800 : 1800)) : 1;
     uniforms.uPointer.value.lerp(pointer, .065);
-    points.rotation.x += (rotation.x - points.rotation.x) * .06;
-    points.rotation.y += (rotation.y - points.rotation.y) * .06;
+    const tilt = 1 - Math.min(1, uniforms.uProgress.value / .4);
+    points.rotation.x += (rotation.x * tilt - points.rotation.x) * .06;
+    points.rotation.y += (rotation.y * tilt - points.rotation.y) * .06;
     try { renderer.render(scene, camera); } catch { fallback(); return; }
     if (disposed || paused) return;
     if (!ready) { ready = true; options.onReady(); }

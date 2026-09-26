@@ -5,7 +5,8 @@ html{scroll-padding-top:100px}
 .motion-control:hover,.motion-control:focus-visible{border-color:#c8c5bf;color:#eeeae3}
 .motion-control:disabled{cursor:default;opacity:.8}
 .motion-control>span:last-child{font-size:11px;color:#a5a39e}
-.precise-cursor{position:fixed;left:0;top:0;width:14px;height:14px;border:1px solid #c5c2b9;border-radius:50%;pointer-events:none;z-index:9999;opacity:0;transition:width 180ms,height 180ms,border-color 180ms;mix-blend-mode:difference}
-.precise-cursor[data-active=true]{width:24px;height:24px;border-color:#fff}
+html.custom-cursor-on,html.custom-cursor-on *{cursor:none!important}
+.custom-cursor svg{transform-box:fill-box;transform-origin:center;transition:transform .25s ease}
+.custom-cursor.cursor--active svg{transform:scale(.7)}
 html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion=reduced] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}
 @media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}

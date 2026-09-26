@@ -4,10 +4,10 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "node ../../scripts/sync-motion.mjs && node ../../scripts/sync-brand.mjs && node ../../scripts/sync-starfield.mjs && node scripts/collect-local-data.mjs && vite",
+    "dev": "node ../../scripts/sync-account.mjs && node ../../scripts/sync-motion.mjs && node ../../scripts/sync-brand.mjs && node ../../scripts/sync-starfield.mjs && node scripts/collect-local-data.mjs && vite",
     "fetch:github": "node scripts/fetch-github.mjs",
     "collect:data": "node scripts/collect-local-data.mjs",
-    "build": "node ../../scripts/sync-motion.mjs && node ../../scripts/sync-brand.mjs && node ../../scripts/sync-starfield.mjs && node scripts/collect-local-data.mjs && tsc -b && vite build",
+    "build": "node ../../scripts/sync-account.mjs && node ../../scripts/sync-motion.mjs && node ../../scripts/sync-brand.mjs && node ../../scripts/sync-starfield.mjs && node scripts/collect-local-data.mjs && tsc -b && vite build",
     "lint": "eslint .",
     "preview": "vite preview",
     "test:motion": "node scripts/test-living-score.mjs"
