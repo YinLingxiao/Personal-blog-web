@@ -53,3 +53,13 @@ Blog 与 Note 的超管上传页分别调用：
 首次上线这套流程时，应一起部署新版 Home、Blog、Note 页面和 Site API，并重启 API 服务。部署的仓库必须保留 `Blog/scripts/build-notes.mjs` 与 `Note/scripts/build-notes.mjs`，供 API 在低权限账户下执行。该账户需要读取上述脚本、读写两个内容根目录，并读写 `/var/lib/moqian`（现有 systemd 服务配置已允许）。`/api/content/` 由现有 `api.moqian.me` Nginx 配置转发。旧的 `/blog/rss.xml` 和 `/rss.xml` 静态地址不会继续更新；新版页面链接到 API 的 RSS 地址。
 
 生产环境应以专用低权限账户运行 API。SQLite（含在线 WAL 备份）和两个内容根目录都需要纳入备份；发布索引可以由源文件重新生成。
+
+## 留言簿
+
+首页 `#guestbook` 调用：
+
+- `GET /api/guestbook?cursor=&limit=20`：公开，游标按 `created_at + id` 从新到旧
+- `POST /api/guestbook`：已登录用户，JSON `{ "body": "..." }`，首尾空白后按 Unicode 码位计 1–500
+- `DELETE /api/guestbook/:id`：作者或超管
+
+写入前先 `GET /api/session/csrf?action=guestbook-create` 或 `guestbook-delete`，并带上 `X-CSRF-Token` 与可信 `Origin`。这个入口对所有登录用户开放。`/api/admin/csrf` 仍只允许超管。留言按账户限流：每分钟 5 条、每小时 30 条，软删除不恢复额度。公开响应只有昵称、头像、是否站主和 `canDelete`。

@@ -5,9 +5,10 @@ interface SectionHeaderProps {
   title: string;
   subtitle: string;
   className?: string;
+  titleFont?: string;
 }
 
-const SectionHeader: React.FC<SectionHeaderProps> = ({ number, title, subtitle, className = '' }) => {
+const SectionHeader: React.FC<SectionHeaderProps> = ({ number, title, subtitle, className = '', titleFont = 'var(--font-display)' }) => {
   return (
     <div className={`mb-10 ${className}`}>
       <p
@@ -20,7 +21,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ number, title, subtitle, 
       </p>
       <h2
         className="text-[clamp(2rem,4vw,3.5rem)] font-light tracking-[-0.03em] leading-none"
-        style={{ fontFamily: 'var(--font-display)', color: 'var(--fg)' }}
+        style={{ fontFamily: titleFont, color: 'var(--fg)' }}
       >
         {title}
       </h2>

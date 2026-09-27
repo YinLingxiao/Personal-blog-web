@@ -20,9 +20,10 @@
 | --- | --- |
 | Prelude | 首屏。WebGL 点阵月，点击展开星河；无 WebGL 或减少动效时回到 ASCII 月与静态星系 |
 | Now | 近况。原色头像、姓名，以及 Ballade / Étude / Opus 的释义 |
-| Ballade | 成篇文章。博客在 `/blog/`，编号列表、分类与搜索 |
+| Ballade | 成篇文章。博客在 `/blog/`，卡片网格、检索与分类 |
 | Opus | 作品。Sonata 为个人项目，Concerto 为正在进行的事 |
 | Étude | 课程笔记与推导。首页一枚分类星图，正文在笔记站 |
+| Guestbook | 留言簿。访客可读；登录后写纯文本，作者与超管可删除 |
 | Coda | 页脚字标与星月 |
 
 <p>
@@ -40,6 +41,12 @@
 
 笔记站独立部署在 `note.moqian.me`。桌面进入分类图谱，点开分类才展开笔记；移动端直接打开最新一篇。正文支持 Markdown、KaTeX 与 `[[wiki link]]`。
 
+## 留言与上传
+
+首页留言簿在 About 与页脚之间，锚点是 `#guestbook`。不必登录就能阅读。登录后可以留下 1–500 字的纯文本，换行会保留，内容按文本显示。作者可以删除自己的留言，超管可以删除任意一条。列表从新到旧，每次 20 条。
+
+超管登录后，账户菜单会打开上传页：博客是 `http://localhost:3000/blog/admin/upload`，笔记是 `http://localhost:3001/admin/upload`。上传的是一个文件夹，里面要有 `index.md`，图片与它放在一起。保存后由 Site API 发布公开内容，不必为每一篇重新构建页面。`draft: true` 只保存，不公开。已有 slug 不会被覆盖。接口、CSRF 与留言限流见 [`Site-api/README.md`](./Site-api/README.md)。
+
 <p>
   <img src="docs/screenshots/etude.png" alt="Étude：首页上的笔记星图与最近练习" width="100%">
 </p>
@@ -54,7 +61,7 @@
 | `Home/` | 主页静态产物 | 构建后从 `New/app/dist/` 拷入 |
 | `Blog/` | 博客，`base: /blog/` | http://localhost:3000/blog/ |
 | `Note/` | 笔记，独立域名 | http://localhost:3001/ |
-| `Site-api/` | 登录与超管上传 | http://localhost:8787/ |
+| `Site-api/` | 登录、留言与内容发布 | http://localhost:8787/ |
 | `Opus/posts/` | 博客 Markdown，不入库 | — |
 | `Notes/` | 笔记 Markdown，不入库 | — |
 

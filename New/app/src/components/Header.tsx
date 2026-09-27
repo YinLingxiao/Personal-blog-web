@@ -15,6 +15,7 @@ const NAV_LINKS = [
   { num: '03', label: 'Opus', href: '#opus' },
   { num: '04', label: 'Étude', href: '#etude' },
   { num: '05', label: 'About', href: '#about' },
+  { num: '06', label: 'Guestbook', href: '#guestbook' },
 ];
 
 const Header: React.FC = () => {
@@ -114,7 +115,7 @@ const Header: React.FC = () => {
           </a>
 
           <div className="flex items-center gap-4 md:gap-7">
-            <nav className="hidden md:flex items-center gap-8">
+            <nav className="hidden lg:flex items-center gap-5 xl:gap-7">
               {NAV_LINKS.map((link) => (
                 <a
                   key={link.href}
@@ -137,7 +138,7 @@ const Header: React.FC = () => {
             <AuthMenu />
 
             <button
-              className="md:hidden flex flex-col items-center justify-center w-8 h-8 gap-[5px]"
+              className="lg:hidden flex flex-col items-center justify-center w-8 h-8 gap-[5px]"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle menu"
               aria-expanded={menuOpen}

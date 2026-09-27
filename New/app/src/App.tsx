@@ -13,6 +13,7 @@ import WritingsSection from '@/sections/WritingsSection';
 import OpusSection from '@/sections/OpusSection';
 import EtudeSection from '@/sections/EtudeSection';
 import AboutSection from '@/sections/AboutSection';
+import GuestbookSection from '@/sections/GuestbookSection';
 import FooterSection from '@/sections/FooterSection';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -34,6 +35,7 @@ const App: React.FC = () => {
         <OpusSection />
         <EtudeSection />
         <AboutSection />
+        <GuestbookSection />
         <FooterSection />
       </main>
     </div>

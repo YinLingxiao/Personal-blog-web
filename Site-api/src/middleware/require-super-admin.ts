@@ -1,8 +1,8 @@
 import type { NextFunction, Request, Response } from "express";
 import { fromNodeHeaders } from "better-auth/node";
-import type { auth as Auth } from "../auth.js";
+import type { SiteAuth } from "../auth.js";
 
-type AuthInstance = typeof Auth;
+type AuthInstance = SiteAuth;
 
 export interface AdminRequest extends Request {
   admin?: {
