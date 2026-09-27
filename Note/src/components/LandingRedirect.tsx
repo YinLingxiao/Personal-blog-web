@@ -11,7 +11,9 @@ import { useIsMobile } from '@/hooks/useMediaQuery';
  */
 export default function LandingRedirect() {
   const isMobile = useIsMobile();
-  const { notes } = useNotes();
+  const { notes, isLoading } = useNotes();
+
+  if (isLoading) return null;
 
   if (!isMobile) return <Navigate to="/graph" replace />;
 

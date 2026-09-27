@@ -4,7 +4,7 @@ import AuthMenu from '@/components/AuthMenu';
 import { Icon } from '@/components/account/icons';
 import { getUploadLinks } from '@/components/account/destinations';
 import { authClient } from '@/lib/auth-client';
-import { AdminApiError, uploadFolder, type UploadResult, type UploadTarget } from '@/lib/admin-api';
+import { AdminApiError, publishSaved, uploadFolder, type UploadResult, type UploadTarget } from '@/lib/admin-api';
 import { formatBytes, validateFiles } from './validation';
 import './upload.css';
 
@@ -61,6 +61,20 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
     }
   }
 
+  async function retryPublish() {
+    if (!result || busy) return;
+    setBusy(true);
+    setError('');
+    try {
+      const outcome = await publishSaved(target, result.slug);
+      setResult({ ...result, ...outcome, publishFailed: false });
+    } catch (cause) {
+      setError(cause instanceof AdminApiError ? cause.message : '暂时无法发布，请稍后重试');
+    } finally {
+      setBusy(false);
+    }
+  }
+
   return <div className={`upload-workspace upload-workspace--${target}`}>
     <header className="upload-header"><div className="upload-shell upload-header__inner">
       {brand}<div className="upload-header__actions"><Link to="/" className="upload-back" aria-label={`返回${isBlog ? '博客' : '笔记'}`}><Icon name="back" /><span>返回{isBlog ? '博客' : '笔记'}</span></Link><AuthMenu /></div>
@@ -79,9 +93,10 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
               <div className="upload-editor">
                 {result ? <section className="upload-success" role="status">
                   <span className="upload-state__icon"><Icon name="check" /></span><p className="upload-kicker">SAVED TO {isBlog ? 'BALLADE' : 'ÉTUDE'}</p>
-                  <h2 ref={successHeading} tabIndex={-1}>{noun}已保存</h2><p>源文件已收好。完成站点构建与部署后，访客就能看到它。</p>
-                  <dl><div><dt>保存位置</dt><dd>{result.category} / {result.slug}</dd></div><div><dt>文件</dt><dd>{result.fileCount} 个 · {formatBytes(result.byteCount)}</dd></div><div><dt>发布状态</dt><dd>等待发布</dd></div></dl>
-                  <div className="upload-success__actions"><button className="upload-button" type="button" onClick={reset}>继续上传<Icon name="arrow" /></button><Link to="/" className="upload-back">返回{destination}</Link></div>
+                  <h2 ref={successHeading} tabIndex={-1}>{result.published ? `${noun}已发布` : `${noun}已保存`}</h2><p>{result.message}</p>
+                  <dl><div><dt>保存位置</dt><dd>{result.category} / {result.slug}</dd></div><div><dt>文件</dt><dd>{result.fileCount} 个 · {formatBytes(result.byteCount)}</dd></div><div><dt>发布状态</dt><dd>{result.published ? '已公开' : result.publishFailed ? '发布失败' : '草稿，未公开'}</dd></div></dl>
+                  {error && <p className="upload-error upload-error--request" role="alert">{error}</p>}
+                  <div className="upload-success__actions">{result.publishFailed && <button className="upload-button" type="button" disabled={busy} onClick={() => void retryPublish()}>{busy ? '正在重试…' : '重试发布'}<Icon name="arrow" /></button>}<button className="upload-button" type="button" onClick={reset}>继续上传<Icon name="arrow" /></button>{result.published ? <Link to={`/post/${result.slug}`} className="upload-back">查看{noun}</Link> : <Link to="/" className="upload-back">返回{destination}</Link>}</div>
                 </section> : <form onSubmit={submit} aria-busy={busy}>
                   <fieldset disabled={busy}>
                     <section className="upload-step">
@@ -104,11 +119,11 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
                     </section>
                     <section className="upload-submit">
                       <div><span className="upload-kicker">保存至{destination}</span><p>{category.trim() || '待填写分类'}<span> / </span>{slug || '待选择文件夹'}</p></div>
-                      <button className="upload-button" type="submit" disabled={Boolean(validation) || !category.trim()}><Icon name="upload" />{busy ? '正在保存…' : `保存${noun}`}</button>
+                      <button className="upload-button" type="submit" disabled={Boolean(validation) || !category.trim()}><Icon name="upload" />{busy ? '正在保存并发布…' : `保存并发布${noun}`}</button>
                     </section>
                   </fieldset>
                   {error && <p className="upload-error upload-error--request" role="alert">{error}</p>}
-                  <p className="upload-publish-note">保存后还需构建并部署站点，内容才会公开。</p>
+                  <p className="upload-publish-note">上传完成后自动发布；标记为草稿的内容暂不公开。</p>
                 </form>}
               </div>
               <aside className="upload-guide" aria-label="文件准备说明">

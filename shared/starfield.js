@@ -20,19 +20,10 @@ export function mountStarfield(canvas) {
       const alpha = star.opacity * twinkle;
 
       if (star.bright) {
-        const glow = ctx.createRadialGradient(x, y, 0, x, y, star.radius * 7);
-        glow.addColorStop(0, `rgba(235, 237, 240, ${alpha * 0.24})`);
-        glow.addColorStop(1, 'rgba(235, 237, 240, 0)');
-        ctx.fillStyle = glow;
-        ctx.fillRect(x - star.radius * 7, y - star.radius * 7, star.radius * 14, star.radius * 14);
-        ctx.strokeStyle = `rgba(235, 237, 240, ${alpha * 0.28})`;
-        ctx.lineWidth = 0.5;
         ctx.beginPath();
-        ctx.moveTo(x - star.radius * 3, y);
-        ctx.lineTo(x + star.radius * 3, y);
-        ctx.moveTo(x, y - star.radius * 3);
-        ctx.lineTo(x, y + star.radius * 3);
-        ctx.stroke();
+        ctx.arc(x, y, star.radius * 3.5, 0, Math.PI * 2);
+        ctx.fillStyle = `rgba(235, 237, 240, ${alpha * 0.14})`;
+        ctx.fill();
       }
 
       ctx.beginPath();
@@ -55,7 +46,7 @@ export function mountStarfield(canvas) {
       seed = (seed * 16807) % 2147483647;
       return (seed - 1) / 2147483646;
     };
-    const count = Math.min(950, Math.max(130, Math.round(width * height / 1900)));
+    const count = Math.min(280, Math.max(70, Math.round(width * height / 5200)));
     stars = Array.from({ length: count }, () => {
       const x = random();
       const y = random();

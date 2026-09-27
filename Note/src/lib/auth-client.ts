@@ -9,7 +9,9 @@ const roleSchema = {
 
 export const authBaseURL =
   import.meta.env.VITE_AUTH_BASE_URL?.replace(/\/$/, '') ||
-  (import.meta.env.DEV ? 'http://localhost:8787' : 'https://api.moqian.me');
+  (typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:8787'
+    : 'https://api.moqian.me');
 
 export const authClient = createAuthClient({
   baseURL: authBaseURL,

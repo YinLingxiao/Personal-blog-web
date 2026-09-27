@@ -2,6 +2,7 @@ import React, { useEffect, useMemo, useState } from 'react';
 import SectionHeader from '@/components/SectionHeader';
 import ScoreSilhouette from '@/components/ScoreSilhouette';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { authBaseURL } from '@/lib/auth-client';
 
 interface LatestPost {
   title: string;
@@ -17,6 +18,9 @@ const WritingsSection: React.FC = () => {
   const headerRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeUp' });
   const listRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeUp', delay: 0.2 });
   const btnRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeUp', delay: 0.3 });
+  const blogBase = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:3000'
+    : '';
 
   const [posts, setPosts] = useState<LatestPost[] | null>(null);
   const [errored, setErrored] = useState(false);
@@ -39,7 +43,7 @@ const WritingsSection: React.FC = () => {
     };
 
     // 博客服务未就位时退回构建期快照，节目单不再整段变成幕间。
-    load('/blog/latest.json')
+    load(`${authBaseURL}/api/content/blog/latest.json`)
       .catch(() => load('/writings-fallback.json'))
       .then((data) => {
         if (!cancelled) setPosts(data.slice(0, 3));
@@ -140,7 +144,7 @@ const WritingsSection: React.FC = () => {
           {posts && posts.length > 0 && (
             <div className="flex flex-wrap items-baseline justify-center gap-x-6 gap-y-2 mt-10">
               <a
-                href="/blog/"
+                href={`${blogBase}/blog/`}
                 className="text-[0.75rem] tracking-[0.06em] transition-colors hover:text-[var(--fg)]"
                 style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}
               >
@@ -149,7 +153,7 @@ const WritingsSection: React.FC = () => {
               {categories.map((cat) => (
                 <a
                   key={cat}
-                  href={`/blog/?category=${encodeURIComponent(cat)}`}
+                  href={`${blogBase}/blog/?category=${encodeURIComponent(cat)}`}
                   className="text-[0.75rem] tracking-[0.06em] transition-colors hover:text-[var(--fg)]"
                   style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}
                 >
@@ -164,7 +168,7 @@ const WritingsSection: React.FC = () => {
               {posts.map((p, index) => (
                 <li key={p.url}>
                   <a
-                    href={p.url}
+                    href={p.url.startsWith('/blog/') ? `${blogBase}${p.url}` : p.url}
                     className="group grid grid-cols-[3rem_1fr] md:grid-cols-[4rem_1fr_auto] gap-x-4 md:gap-x-8 gap-y-3 py-7 md:py-8 no-underline transition-colors duration-300"
                     style={{
                       borderBottom: '1px solid var(--border)',
@@ -211,7 +215,7 @@ const WritingsSection: React.FC = () => {
 
         <div ref={btnRef} className="text-center mt-12">
           <a
-            href="/blog/"
+            href={`${blogBase}/blog/`}
             className="group inline-flex items-center gap-2 text-[0.75rem] tracking-[0.05em] transition-colors hover:text-[var(--fg)]"
             style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
           >

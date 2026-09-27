@@ -6,9 +6,11 @@ const defaultOrigins = [
   "http://localhost:8080",
   "http://localhost:3000",
   "http://localhost:3001",
+  "http://localhost:5173",
   "http://127.0.0.1:8080",
   "http://127.0.0.1:3000",
   "http://127.0.0.1:3001",
+  "http://127.0.0.1:5173",
   "https://moqian.me",
   "https://note.moqian.me",
 ];
@@ -74,12 +76,24 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
   if (production && !env.TRUSTED_ORIGINS) throw new Error("TRUSTED_ORIGINS must be explicit in production");
   const blogContentRoot = resolveContentRoot(env.BLOG_CONTENT_ROOT, "../Opus/posts", "BLOG_CONTENT_ROOT", production);
   const noteContentRoot = resolveContentRoot(env.NOTE_CONTENT_ROOT, "../Notes", "NOTE_CONTENT_ROOT", production);
+  const publishedContentRoot = env.PUBLISHED_CONTENT_ROOT
+    ? resolveContentRoot(env.PUBLISHED_CONTENT_ROOT, "", "PUBLISHED_CONTENT_ROOT", production)
+    : path.resolve(production ? "/var/lib/moqian/published" : "./data/published");
   const relativeBlogToNote = path.relative(blogContentRoot, noteContentRoot);
   const relativeNoteToBlog = path.relative(noteContentRoot, blogContentRoot);
   const nestedRoots = !relativeBlogToNote || !relativeNoteToBlog ||
     (!relativeBlogToNote.startsWith("..") && !path.isAbsolute(relativeBlogToNote)) ||
     (!relativeNoteToBlog.startsWith("..") && !path.isAbsolute(relativeNoteToBlog));
   if (nestedRoots) throw new Error("BLOG_CONTENT_ROOT and NOTE_CONTENT_ROOT must be separate, non-nested paths");
+  for (const sourceRoot of [blogContentRoot, noteContentRoot]) {
+    const forward = path.relative(sourceRoot, publishedContentRoot);
+    const backward = path.relative(publishedContentRoot, sourceRoot);
+    if (!forward || !backward ||
+      (!forward.startsWith("..") && !path.isAbsolute(forward)) ||
+      (!backward.startsWith("..") && !path.isAbsolute(backward))) {
+      throw new Error("PUBLISHED_CONTENT_ROOT must be separate from content roots");
+    }
+  }
 
   const google = {
     clientId: env.GOOGLE_CLIENT_ID?.trim() || "",
@@ -101,6 +115,7 @@ export function loadConfig(env: NodeJS.ProcessEnv = process.env) {
     databasePath,
     blogContentRoot,
     noteContentRoot,
+    publishedContentRoot,
     trustedOrigins: readList(env.TRUSTED_ORIGINS),
     upload: {
       maxFiles: readInteger(env, "UPLOAD_MAX_FILES", 32, 1, 128),

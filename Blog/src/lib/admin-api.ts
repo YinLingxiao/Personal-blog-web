@@ -9,7 +9,8 @@ export interface UploadResult {
   fileCount: number;
   byteCount: number;
   stored: true;
-  buildTriggered: false;
+  published: boolean;
+  publishFailed?: boolean;
   message: string;
 }
 
@@ -51,5 +52,17 @@ export async function uploadFolder(target: UploadTarget, category: string, files
     credentials: 'include',
     headers: { 'X-CSRF-Token': csrf.token },
     body: form,
+  }));
+}
+
+export async function publishSaved(target: UploadTarget, slug: string) {
+  const csrf = await readResponse<{ token: string }>(await fetch(`${authBaseURL}/api/admin/csrf?action=publish`, {
+    credentials: 'include',
+  }));
+  return readResponse<{ published: boolean; message: string }>(await fetch(`${authBaseURL}/api/admin/content/${target}/publish`, {
+    method: 'POST',
+    credentials: 'include',
+    headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.token },
+    body: JSON.stringify({ slug }),
   }));
 }

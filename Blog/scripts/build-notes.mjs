@@ -19,10 +19,12 @@ const PROFILE = {
 };
 
 const OPUS_POSTS = resolve(ROOT, PROFILE.contentDir);
-const OUT_POSTS = resolve(ROOT, 'src/generated/posts.json');
-const OUT_PUBLIC_POSTS = resolve(ROOT, 'public/posts');
-const OUT_LATEST = resolve(ROOT, 'public/latest.json');
-const OUT_RSS = resolve(ROOT, 'public/rss.xml');
+const RUNTIME_OUTPUT = process.env.BLOG_OUTPUT_ROOT ? resolve(process.env.BLOG_OUTPUT_ROOT) : null;
+const ASSET_BASE = process.env.BLOG_ASSET_BASE || PROFILE.urlBase;
+const OUT_POSTS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'index.json') : resolve(ROOT, 'src/generated/posts.json');
+const OUT_PUBLIC_POSTS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'posts') : resolve(ROOT, 'public/posts');
+const OUT_LATEST = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'latest.json') : resolve(ROOT, 'public/latest.json');
+const OUT_RSS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'rss.xml') : resolve(ROOT, 'public/rss.xml');
 
 function escapeXml(value) {
   return String(value)
@@ -52,7 +54,7 @@ function plainExcerpt(markdown, limit = 220) {
 
 function buildRss({ items, feed, urlBase, feedPath }) {
   const site = `${feed.origin}${urlBase}/`;
-  const self = `${feed.origin}${feedPath}`;
+  const self = process.env.BLOG_RSS_SELF || `${feed.origin}${feedPath}`;
   const entries = items.map((item) => {
     const link = `${feed.origin}${item.path}`;
     const category = item.category ? `\n      <category>${escapeXml(item.category)}</category>` : '';
@@ -195,13 +197,13 @@ function resolveCover(value, slug, bundleDir) {
     console.warn(`[build-notes] cover 文件不存在，已忽略: "${slug}" cover="${value}"`);
     return '';
   }
-  return `${PROFILE.urlBase}/posts/${slug}/${file}`;
+  return `${ASSET_BASE}/posts/${encodeURIComponent(slug)}/${encodeURIComponent(file)}`;
 }
 
 function rewriteImagePaths(body, slug, bundleDir) {
   if (!bundleDir) return body;
   // ![alt](./xxx.png) → ![alt](<urlBase>/posts/<slug>/xxx.png)  (urlBase: /blog for blog, '' for note)
-  return body.replace(/!\[([^\]]*)\]\(\.\/([^)]+)\)/g, (_m, alt, path) => `![${alt}](${PROFILE.urlBase}/posts/${slug}/${path})`);
+  return body.replace(/!\[([^\]]*)\]\(\.\/([^)]+)\)/g, (_m, alt, path) => `![${alt}](${ASSET_BASE}/posts/${encodeURIComponent(slug)}/${encodeURIComponent(path)})`);
 }
 
 /**
@@ -376,7 +378,7 @@ function build() {
     items: feedItems,
     feed: PROFILE.feed,
     urlBase: PROFILE.urlBase,
-    feedPath: `${PROFILE.urlBase}/rss.xml`,
+    feedPath: RUNTIME_OUTPUT ? '/api/content/blog/rss.xml' : `${PROFILE.urlBase}/rss.xml`,
   }), 'utf8');
   console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
 }

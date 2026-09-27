@@ -58,7 +58,7 @@
 | `Opus/posts/` | 博客 Markdown，不入库 | — |
 | `Notes/` | 笔记 Markdown，不入库 | — |
 
-主页开发服务把 `/blog/*` 代理到 `3000`。博客构建写出 `/blog/latest.json`，主页用它列出最近文章。
+主页开发服务把 `/blog/*` 代理到 `3000`。博客和笔记的文章索引、图片、最近内容与 RSS 由 Site API 动态提供；上传成功后自动生成并发布内容，无需每篇都重建页面。
 
 ## 本地
 
@@ -74,7 +74,7 @@ npm --prefix Note install
 npm --prefix Site-api install
 ```
 
-内容是 page bundle：`<分类>/<slug>/index.md`，配图与 `index.md` 同目录，正文用 `./xxx.png` 引用。`draft: true` 不进入构建。格式见 [`Opus/README.md`](./Opus/README.md)。
+内容是 page bundle：`<分类>/<slug>/index.md`，配图与 `index.md` 同目录，正文用 `./xxx.png` 引用。`draft: true` 不会公开。格式见 [`Opus/README.md`](./Opus/README.md)。
 
 ```powershell
 npm --prefix New/app run dev
@@ -107,6 +107,8 @@ Copy-Item New/app/dist/* Home/ -Recurse -Force
 | `https://api.moqian.me/` | `Site-api/` |
 
 生产环境需要 SPA history fallback。
+
+页面代码或样式更新时才需要重新部署 Home、Blog、Note 的构建产物。平时在超管上传页添加文章或笔记，Site API 会自动更新公开内容。首次启用自动发布需要一起部署新版 Site API 和三个页面；部署步骤见 [`Site-api/README.md`](./Site-api/README.md)。
 
 ## 技术
 

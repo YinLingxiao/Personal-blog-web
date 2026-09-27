@@ -2,6 +2,7 @@ import crypto from "node:crypto";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import type { RuntimeConfig } from "../config.js";
 import { ContentStore, type ContentTarget, type UploadManifest } from "../content/content-store.js";
+import { ContentPublisher } from "../content/content-publisher.js";
 import { ContentValidationError } from "../content/policy.js";
 import type { AdminRequest } from "../middleware/require-super-admin.js";
 import { createCsrfToken, verifyCsrfToken } from "../security/csrf.js";
@@ -32,6 +33,7 @@ function parseManifest(value: FormDataEntryValue | null) {
 export function createAdminContentRouter(
   config: RuntimeConfig,
   store: ContentStore,
+  publisher: ContentPublisher,
   requireSuperAdmin: (req: AdminRequest, res: Response, next: NextFunction) => void,
   rateLimit: (req: AdminRequest, res: Response, next: NextFunction) => void,
 ) {
@@ -47,7 +49,7 @@ export function createAdminContentRouter(
     }
     res.setHeader("Cache-Control", "no-store");
     res.json({
-      token: createCsrfToken(config, { userId: req.admin!.id, origin, action: "content-upload" }),
+      token: createCsrfToken(config, { userId: req.admin!.id, origin, action: req.query.action === "publish" ? "content-publish" : "content-upload" }),
       expiresIn: config.upload.csrfTtlSeconds,
     });
   });
@@ -138,12 +140,25 @@ export function createAdminContentRouter(
         userId: req.admin!.id,
         requestId: req.get("x-request-id") || crypto.randomUUID(),
       });
-      res.status(201).json({
-        ...result,
-        stored: true,
-        buildTriggered: false,
-        message: "源文件已保存，但尚未公开；请手动构建并部署对应站点。",
-      });
+      try {
+        const items = await publisher.publish(target);
+        const published = items.some((item) => item.id === result.slug);
+        res.status(201).json({
+          ...result,
+          stored: true,
+          published,
+          message: published ? "已保存并发布，访客现在可以看到。" : "草稿已保存，暂不公开。",
+        });
+      } catch (error) {
+        console.error("[site-api] publication failed after upload", error);
+        res.status(202).json({
+          ...result,
+          stored: true,
+          published: false,
+          publishFailed: true,
+          message: "源文件已保存，但发布失败。请点击重试发布，无需重新上传。",
+        });
+      }
     } catch (error) {
       if (error instanceof ContentValidationError) {
         res.status(error.status).json({ code: error.code, message: error.message });
@@ -152,6 +167,33 @@ export function createAdminContentRouter(
       next(error);
     } finally {
       activeUploads.delete(userId);
+    }
+  });
+
+  router.post("/content/:target/publish", rateLimit, async (req: AdminRequest, res) => {
+    const target = req.params.target as ContentTarget;
+    if (target !== "blog" && target !== "note") {
+      res.status(404).json({ code: "UNKNOWN_TARGET", message: "未知内容目标" });
+      return;
+    }
+    const origin = originFor(req, config);
+    const token = req.get("x-csrf-token") || "";
+    if (!origin || !verifyCsrfToken(config, token, { userId: req.admin!.id, origin, action: "content-publish" })) {
+      res.status(403).json({ code: "INVALID_CSRF", message: "请求校验失败，请刷新后重试" });
+      return;
+    }
+    const slug = req.body?.slug;
+    if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+      res.status(400).json({ code: "INVALID_CONTENT", message: "内容名称无效" });
+      return;
+    }
+    try {
+      const items = await publisher.publish(target);
+      const published = items.some((item) => item.id === slug);
+      res.json({ published, message: published ? "发布成功，访客现在可以看到。" : "草稿暂不公开。" });
+    } catch (error) {
+      console.error("[site-api] publication retry failed", error);
+      res.status(503).json({ code: "PUBLICATION_FAILED", message: "发布仍未完成，请稍后重试。源文件已保存。" });
     }
   });
 

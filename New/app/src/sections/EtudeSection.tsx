@@ -3,6 +3,7 @@ import React, { useEffect, useState } from 'react';
 import SectionHeader from '@/components/SectionHeader';
 import ScoreSilhouette from '@/components/ScoreSilhouette';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
+import { authBaseURL } from '@/lib/auth-client';
 
 interface NoteItem {
   id: string;
@@ -27,7 +28,9 @@ const EtudeSection: React.FC = () => {
     stagger: 0.09,
     y: 20,
   });
-  const noteBase = import.meta.env.DEV ? 'http://localhost:3001' : 'https://note.moqian.me';
+  const noteBase = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+    ? 'http://localhost:3001'
+    : 'https://note.moqian.me';
 
   const [active, setActive] = useState<string | null>(null);
   const [digest, setDigest] = useState<NotesDigest | null>(null);
@@ -35,7 +38,7 @@ const EtudeSection: React.FC = () => {
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/notes-latest.json', { cache: 'no-cache' })
+    fetch(`${authBaseURL}/api/content/note/latest.json`, { cache: 'no-store' })
       .then((response) => (response.ok ? response.json() : Promise.reject(new Error(`HTTP ${response.status}`))))
       .then((data: NotesDigest) => {
         if (!cancelled && Array.isArray(data.items) && Array.isArray(data.categories)) setDigest(data); else if (!cancelled) setErrored(true);

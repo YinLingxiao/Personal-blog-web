@@ -12,7 +12,7 @@
 .auth-trigger__label { max-width: 100px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .auth-chevron { width: 12px; height: 12px; flex: none; transition: transform .18s; }
 .auth-trigger[aria-expanded="true"] .auth-chevron { transform: rotate(180deg); }
-.auth-popover { position: absolute; top: calc(100% + 9px); right: 0; width: min(304px, calc(100vw - 96px)); padding: 10px; border: 1px solid #363532; border-radius: 8px; background: #111110; box-shadow: 0 16px 60px #0009; }
+.auth-popover { position: absolute; z-index: 2; top: calc(100% + 9px); right: 0; width: min(304px, calc(100vw - 96px)); padding: 10px; border: 1px solid #363532; border-radius: 8px; background: #111110; box-shadow: 0 16px 60px #0009; }
 .auth-account { padding: 14px 12px 18px; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .auth-account strong { color: #f0ece4; font-size: 18px; font-weight: 500; overflow-wrap: anywhere; }
 .auth-account p, .auth-account__email { color: #a6a39d; font-size: 12px; overflow-wrap: anywhere; }
@@ -34,7 +34,7 @@
 .auth-error { margin: 10px 12px; color: #edb7ae; font-size: 12px; }
 .auth-menu--compact .auth-trigger { gap: 6px; }
 .auth-menu--compact .auth-trigger__label { display: none; }
-header.note-toolbar { z-index: 50; overflow: visible; }
+.bl-topbar, .upload-header, header.note-toolbar { position: relative; z-index: 40; overflow: visible; }
 @keyframes auth-pulse { 50% { opacity: .4; } }
 @media (max-width: 520px) { .auth-trigger__label { display: none; } }
 @media (prefers-reduced-motion: reduce) { .auth-avatar--loading { animation: none; } .auth-menu * { transition: none; } }

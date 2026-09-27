@@ -143,7 +143,7 @@ body {
 .md-body blockquote p { color: #888; }
 .md-body strong { color: var(--color-foreground); font-weight: 600; }
 .md-body hr { border: none; border-top: 1px solid rgba(255,255,255,0.06); margin: 1.8em 0; }
-.md-body table { border-collapse: collapse; width: 100%; margin: 0.8em 0; }
+.md-body table { display: block; max-width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; border-collapse: collapse; margin: 0.8em 0; }
 .md-body th, .md-body td { border: 1px solid rgba(255,255,255,0.06); padding: 0.5em 0.8em; text-align: left; }
 .md-body th { background: rgba(255,255,255,0.03); font-weight: 600; color: #ddd; }
 .md-body td { color: #bbb; }
@@ -156,8 +156,6 @@ body {
   .md-body p, .md-body li { line-height: 1.75; }
   .md-body code { font-size: 0.9em; }
   .md-body pre { padding: 0.9em; }
-  /* Let wide tables scroll inside the content column instead of bursting the viewport */
-  .md-body table { display: block; overflow-x: auto; -webkit-overflow-scrolling: touch; }
 }
 
 /* ── Wiki Links ── */

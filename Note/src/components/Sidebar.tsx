@@ -2,6 +2,7 @@ import { useEffect, useRef } from 'react';
 import type { Note } from '../types';
 import { sidebarConfig } from '../config';
 import MoonPhase from './MoonPhase';
+import { authBaseURL } from '@/lib/auth-client';
 
 interface Props {
   notes: Note[];
@@ -95,7 +96,7 @@ export default function Sidebar({ notes, selectedId, search, onSearch, onSelect,
               墨浅 &middot; {notes.length} {sidebarConfig.noteCountSuffix}
             </span>
             <a
-              href="/rss.xml"
+              href={`${authBaseURL}/api/content/note/rss.xml`}
               className="text-[10px] text-[#333] tracking-widest hover:text-[#666] transition-colors"
             >
               RSS

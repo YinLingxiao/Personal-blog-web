@@ -18,7 +18,7 @@ function formatDate(ts: number) {
 export default function ArticleLayout() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { posts } = usePosts();
+  const { posts, isLoading, error } = usePosts();
 
   useEffect(() => {
     document.title = siteConfig.title;
@@ -125,6 +125,10 @@ export default function ArticleLayout() {
               )}
             </nav>
           </>
+        ) : isLoading ? (
+          <div className="fade-up text-center py-24 text-[#8c8c8c]">正在打开文章…</div>
+        ) : error ? (
+          <div className="fade-up text-center py-24 text-[#8c8c8c]">暂时无法读取文章，请稍后刷新重试。</div>
         ) : (
           <div className="fade-up text-center py-24">
             <span

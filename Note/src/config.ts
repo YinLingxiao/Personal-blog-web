@@ -83,6 +83,8 @@ export const siteConfig: SiteConfig = {
   language: "zh-CN",
 }
 
+const localPreview = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+
 export const headerConfig: HeaderConfig = {
   brandMark: "墨浅",
   siteBadge: "笔记",
@@ -92,11 +94,11 @@ export const headerConfig: HeaderConfig = {
   backgroundButtonTitle: "切换背景",
   importButtonLabel: "",
   menuButtonTitle: "笔记目录",
-  homeUrl: import.meta.env.DEV ? "http://localhost:8080/" : "https://moqian.me/",
+  homeUrl: localPreview ? "http://localhost:8080/" : "https://moqian.me/",
   homeButtonLabel: "主页",
   homeButtonTitle: "返回主页",
   // 生产环境博客反向代理在主站 /blog/；本地是独立 dev server 的 :3000。
-  blogUrl: import.meta.env.DEV ? "http://localhost:3000/blog/" : "https://moqian.me/blog/",
+  blogUrl: localPreview ? "http://localhost:3000/blog/" : "https://moqian.me/blog/",
   blogButtonLabel: "博文",
   blogButtonTitle: "前往博文",
 }

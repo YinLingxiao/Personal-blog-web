@@ -6,8 +6,11 @@ import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 interface Project { name: string; description: string; language: string; url: string }
 const utility: Project = { name: '视频下载工具', description: '', language: 'Utility', url: 'https://video.moqian.me/' };
+const localNoteUrl = typeof window !== 'undefined' && ['localhost', '127.0.0.1'].includes(window.location.hostname)
+  ? 'http://localhost:3001/'
+  : 'https://note.moqian.me/';
 const timeline = [
-  { text: '知识花园 note.moqian.me —— 课程笔记与知识图谱，持续更新。', href: 'https://note.moqian.me/' },
+  { text: '知识花园 note.moqian.me —— 课程笔记与知识图谱，持续更新。', href: localNoteUrl },
   { text: '本站一体化 —— 主页、博客与笔记共用一套设计语言。', href: '/' },
   { text: '站点账户体系 —— OAuth 登录与内容上传接口，正在接线。', href: '' },
 ];

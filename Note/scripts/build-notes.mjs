@@ -18,9 +18,11 @@ const PROFILE = {
 };
 
 const OPUS_POSTS = resolve(ROOT, PROFILE.contentDir);
-const OUT_NOTES = resolve(ROOT, 'src/generated/notes.json');
-const OUT_PUBLIC_POSTS = resolve(ROOT, 'public/posts');
-const OUT_RSS = resolve(ROOT, 'public/rss.xml');
+const RUNTIME_OUTPUT = process.env.NOTE_OUTPUT_ROOT ? resolve(process.env.NOTE_OUTPUT_ROOT) : null;
+const ASSET_BASE = process.env.NOTE_ASSET_BASE || PROFILE.urlBase;
+const OUT_NOTES = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'index.json') : resolve(ROOT, 'src/generated/notes.json');
+const OUT_PUBLIC_POSTS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'posts') : resolve(ROOT, 'public/posts');
+const OUT_RSS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'rss.xml') : resolve(ROOT, 'public/rss.xml');
 
 function escapeXml(value) {
   return String(value)
@@ -50,7 +52,7 @@ function plainExcerpt(markdown, limit = 220) {
 
 function buildRss({ items, feed, urlBase, feedPath }) {
   const site = `${feed.origin}${urlBase}/`;
-  const self = `${feed.origin}${feedPath}`;
+  const self = process.env.NOTE_RSS_SELF || `${feed.origin}${feedPath}`;
   const entries = items.map((item) => {
     const link = `${feed.origin}${item.path}`;
     const category = item.category ? `\n      <category>${escapeXml(item.category)}</category>` : '';
@@ -177,7 +179,7 @@ function copyBundleImages(slug, bundleDir) {
 function rewriteImagePaths(body, slug, bundleDir) {
   if (!bundleDir) return body;
   // ![alt](./xxx.png) → ![alt](/posts/<slug>/xxx.png)
-  return body.replace(/!\[([^\]]*)\]\(\.\/([^)]+)\)/g, (_m, alt, path) => `![${alt}](${PROFILE.urlBase}/posts/${slug}/${path})`);
+  return body.replace(/!\[([^\]]*)\]\(\.\/([^)]+)\)/g, (_m, alt, path) => `![${alt}](${ASSET_BASE}/posts/${encodeURIComponent(slug)}/${encodeURIComponent(path)})`);
 }
 
 /**
@@ -313,6 +315,29 @@ function build() {
   writeFileSync(OUT_NOTES, JSON.stringify(notes, null, 2), 'utf8');
   console.log(`[build-notes] wrote ${notes.length} notes → ${relative(ROOT, OUT_NOTES)}`);
 
+  if (RUNTIME_OUTPUT) {
+    const counts = new Map();
+    notes.forEach((note) => {
+      const category = (note.category || '').trim();
+      if (category) counts.set(category, (counts.get(category) || 0) + 1);
+    });
+    const items = notes.slice(0, 5).map((note) => {
+      const [subject, ...rest] = String(note.title).split(/\s*—{2,}\s*/);
+      return {
+        id: note.id,
+        title: subject.trim() || note.title,
+        kind: rest.join(' ').trim(),
+        category: (note.category || '').trim(),
+        tags: note.tags.slice(0, 3),
+      };
+    });
+    writeFileSync(join(RUNTIME_OUTPUT, 'latest.json'), JSON.stringify({
+      total: notes.length,
+      categories: [...counts.entries()].sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0], 'zh')).slice(0, 6).map(([name, count]) => ({ name, count })),
+      items,
+    }, null, 2), 'utf8');
+  }
+
   const feedItems = notes.slice(0, PROFILE.feed.max).map((note) => ({
     title: note.title,
     path: `/post/${encodeURIComponent(note.id)}`,
@@ -325,7 +350,7 @@ function build() {
     items: feedItems,
     feed: PROFILE.feed,
     urlBase: PROFILE.urlBase,
-    feedPath: '/rss.xml',
+    feedPath: RUNTIME_OUTPUT ? '/api/content/note/rss.xml' : '/rss.xml',
   }), 'utf8');
   console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
 }

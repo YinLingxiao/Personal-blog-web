@@ -2,6 +2,7 @@ import { useEffect, useId, useMemo, useState, type CSSProperties } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { Search, X } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
+import { authBaseURL } from '@/lib/auth-client';
 import BlogBrandHome from '@/components/BlogBrandHome';
 import AuthMenu from '@/components/AuthMenu';
 import { siteConfig, headerConfig } from '@/config';
@@ -134,7 +135,7 @@ function PostCard({ post, no, order }: { post: Post; no: number; order: number }
 }
 
 export default function BlogHome() {
-  const { posts } = usePosts();
+  const { posts, isLoading, error } = usePosts();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
   // 从 URL 读取初始分类，让 Home 的「按分类」入口（/blog/?category=技术）能直接落到筛选结果上。
@@ -304,7 +305,9 @@ export default function BlogHome() {
           </section>
         )}
 
-        {posts.length === 0 ? (
+        {isLoading || error ? (
+          <div className="bl-empty"><p className="bl-empty__text">{error ? '暂时无法读取文章，请稍后刷新重试。' : '正在打开节目单…'}</p></div>
+        ) : posts.length === 0 ? (
           <div className="bl-empty">
             <p className="bl-empty__label" lang="en">Intermission · 幕间</p>
             <p className="bl-empty__text">节目单暂时留白，新曲正在酝酿。</p>
@@ -339,7 +342,7 @@ export default function BlogHome() {
         <div className="bl-wrap bl-footer__inner">
           <span className="bl-footer__group">
             <span>Moqian · Ballade</span>
-            <a href="/blog/rss.xml">RSS</a>
+            <a href={`${authBaseURL}/api/content/blog/rss.xml`}>RSS</a>
           </span>
           <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
             京ICP备2026027832号

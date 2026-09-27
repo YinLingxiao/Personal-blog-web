@@ -5,9 +5,11 @@ import type { RuntimeConfig } from "./config.js";
 import type { auth as Auth } from "./auth.js";
 import { providerStatus } from "./auth.js";
 import { ContentStore } from "./content/content-store.js";
+import { ContentPublisher } from "./content/content-publisher.js";
 import { createRequireSuperAdmin } from "./middleware/require-super-admin.js";
 import { createAdminRateLimit } from "./middleware/rate-limit.js";
 import { createAdminContentRouter } from "./routes/admin-content.js";
+import { createPublicContentRouter } from "./routes/public-content.js";
 import type Database from "better-sqlite3";
 
 export function createApp(config: RuntimeConfig, auth: typeof Auth, database: Database.Database) {
@@ -41,6 +43,7 @@ export function createApp(config: RuntimeConfig, auth: typeof Auth, database: Da
   });
 
   const store = new ContentStore(config, database);
+  const publisher = new ContentPublisher(config);
   setImmediate(() => {
     try {
       store.cleanupStaging();
@@ -51,9 +54,11 @@ export function createApp(config: RuntimeConfig, auth: typeof Auth, database: Da
   app.use("/api/admin", createAdminContentRouter(
     config,
     store,
+    publisher,
     createRequireSuperAdmin(auth),
     createAdminRateLimit(config.upload.attemptsPerHour),
   ));
+  app.use("/api/content", createPublicContentRouter(publisher));
 
   app.use((error: unknown, _req: express.Request, res: express.Response, _next: express.NextFunction) => {
     console.error("[site-api] request failed", error);

@@ -14,4 +14,4 @@ for (const project of ['New/app', 'Blog', 'Note']) {
     } else await writeFile(target, source);
   }
 }
-console.log('Motion sources synchronized.');
+console.log(`Motion sources ${process.argv.includes('--check') ? 'verified' : 'synchronized'}.`);
