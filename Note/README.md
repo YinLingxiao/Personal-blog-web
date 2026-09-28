@@ -2,6 +2,8 @@
 
 墨浅笔记站的独立前端项目，部署在 `note.moqian.me` 根路径。内容来自工作区同级的 `Notes/`，构建时生成站内数据与图片资源。
 
+笔记内容仓库：[YinLingxiaoNote](https://github.com/YinLingxiao/YinLingxiaoNote)。当前构建仍读取本地 `Notes/`，未配置仓库自动同步。
+
 ## Commands
 
 ```bash

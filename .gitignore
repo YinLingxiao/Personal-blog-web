@@ -20,6 +20,8 @@ tmp/
 # Private authoring area
 Opus/notes/*
 !Opus/notes/.gitkeep
+Opus/posts/*
+Notes/*
 
 # Keep repository READMEs only; all other Markdown stays local
 *.md
@@ -40,6 +42,7 @@ Site-api/dist/
 *.sqlite-shm
 *.sqlite-wal
 video-downloader/
+output/
 
 *.log
 *.rar

@@ -2,6 +2,8 @@
 
 墨浅个人博客的独立前端项目，部署在 `moqian.me/blog/`。内容来自工作区同级的 `Opus/posts/`，构建时生成文章数据、图片资源与主页最新文章数据。
 
+博文内容仓库：[YinLingxiaoBlog](https://github.com/YinLingxiao/YinLingxiaoBlog)。当前构建仍读取本地 `Opus/posts/`，未配置仓库自动同步。
+
 ## Commands
 
 ```bash

@@ -53,7 +53,7 @@
 
 ## 仓库
 
-本仓库只放应用源码。文章与笔记留在本地，由 `.gitignore` 隔开。
+本仓库包含应用源码；博客与笔记的内容目录分别是 `Opus/posts/` 和 `Notes/`。独立内容仓库为 [YinLingxiaoBlog](https://github.com/YinLingxiao/YinLingxiaoBlog) 和 [YinLingxiaoNote](https://github.com/YinLingxiao/YinLingxiaoNote)。目前未配置与这两个仓库的自动同步。
 
 | 路径 | 用途 | 开发地址 |
 | --- | --- | --- |
