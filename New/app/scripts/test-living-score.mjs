@@ -231,6 +231,20 @@ test('a galaxy chosen before the renderer exists is honored without replaying th
   scene.scroll(.2, 0); assert.equal(uniforms().uRelease.value, 0); assert.equal(uniforms().uProgress.value, .2);
   scene.dispose();
 });
+test('the moon turns while it is the body and holds its face once the galaxy has opened', () => {
+  const { scene, step, uniforms } = sceneEnvironment(false, false);
+  step();
+  const start = uniforms().uMoonSpin.value;
+  step(64);
+  assert.ok(uniforms().uMoonSpin.value > start && uniforms().uMoonSpin.value - start < .02);
+  scene.galaxy(true);
+  for (let i = 0; i < 80; i++) step();
+  assert.equal(uniforms().uGalaxy.value, 1);
+  const held = uniforms().uMoonSpin.value;
+  step(64);
+  assert.equal(uniforms().uMoonSpin.value, held);
+  scene.dispose();
+});
 test('pointer response follows the stationary surface and is released on dispose', () => {
   const surface = new EventTarget(); const added = [], removed = [];
   surface.addEventListener = type => added.push(type); surface.removeEventListener = type => removed.push(type);

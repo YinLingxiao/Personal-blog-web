@@ -143,7 +143,7 @@ export default function MoonPhase() {
     <div className="flex flex-col items-center py-4 gap-2">
       <canvas ref={canvasRef} style={{ width: 48, height: 48 }} />
       <div className="text-center">
-        <div className="text-[10px] text-[#555]">{today}</div>
+        <div className="text-[10px] text-[color:var(--faint)]">{today}</div>
         <div className="text-[10px] text-[#666]">{name}</div>
       </div>
     </div>

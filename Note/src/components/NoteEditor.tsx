@@ -33,7 +33,7 @@ export default function NoteEditor({ note, allNotes, onNavigate }: Props) {
     <div className="h-full flex flex-col">
       {/* Top bar - clean and minimal */}
       <div className="flex items-center gap-2 px-4 sm:px-6 py-2.5 border-b border-white/[0.04]">
-        <span className="text-[10px] tracking-widest text-[#555] uppercase font-serif">{editorConfig.previewLabel}</span>
+        <span className="text-[10px] tracking-widest text-[color:var(--faint)] uppercase font-serif">{editorConfig.previewLabel}</span>
         <div className="flex-1" />
         {note.source && (
           <a href={note.source} target="_blank" rel="noopener noreferrer" className="text-xs text-accent/60 hover:text-accent truncate max-w-40">

@@ -6,7 +6,7 @@ import { headerConfig } from '@/config';
 export default function NotFound() {
   return (
     <div className="blog-grid min-h-screen text-[#e5e5e5] flex flex-col">
-      <header className="border-b border-[#1a1a1a]">
+      <header className="border-b border-[color:var(--hairline)]">
         <div className="max-w-[1440px] mx-auto px-6 md:px-10 h-16 flex items-center justify-between">
           <BlogBrandHome />
           <nav className="flex items-center gap-5 text-[0.75rem] tracking-[0.05em] text-[#8c8c8c]">
@@ -23,7 +23,7 @@ export default function NotFound() {
 
       <main className="flex-1 max-w-[1440px] mx-auto w-full px-6 md:px-10 flex items-center">
         <div className="fade-up py-24 max-w-[46ch]">
-          <span className="block text-[0.625rem] uppercase tracking-[0.22em] mb-6 text-[#404040]">
+          <span className="block text-[0.625rem] uppercase tracking-[0.22em] mb-6 text-[color:var(--hairline-hover)]">
             Intermission · 幕间 · 404
           </span>
           <h1 className="spread__title mb-6">Tacet</h1>
@@ -48,8 +48,8 @@ export default function NotFound() {
         </div>
       </main>
 
-      <footer className="border-t border-[#1a1a1a]">
-        <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-6 text-[0.625rem] tracking-[0.08em] text-[#404040]">
+      <footer className="border-t border-[color:var(--hairline)]">
+        <div className="max-w-[1440px] mx-auto px-6 md:px-10 py-6 text-[0.625rem] tracking-[0.08em] text-[color:var(--hairline-hover)]">
           <span>Moqian · Ballade</span>
         </div>
       </footer>

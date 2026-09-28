@@ -4,7 +4,7 @@ import { headerConfig } from '@/config';
 
 export default function NotFound() {
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: '#050505' }}>
+    <div className="h-screen flex flex-col overflow-hidden" style={{ backgroundColor: 'var(--ground)' }}>
       <header className="note-toolbar liquid-glass h-11 shrink-0 flex items-center justify-between px-4">
         <div className="relative z-10 flex items-center gap-3">
           <NoteBrandHome />
@@ -28,7 +28,7 @@ export default function NotFound() {
 
       <main className="flex-1 flex items-center justify-center px-6">
         <div className="max-w-[42ch]">
-          <span className="block text-[0.625rem] uppercase tracking-[0.22em] mb-5 text-[#404040]">
+          <span className="block text-[0.625rem] uppercase tracking-[0.22em] mb-5 text-[color:var(--hairline-hover)]">
             Intermission · 幕间 · 404
           </span>
           <h1 className="font-serif-cn text-[1.75rem] leading-[1.4] text-[#e0e0e0] mb-5">

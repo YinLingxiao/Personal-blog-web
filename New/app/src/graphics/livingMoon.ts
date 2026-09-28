@@ -20,7 +20,7 @@ const ease = (x: number) => {
   }
   return 3 * (1 - t) * (1 - t) * t + 3 * (1 - t) * t * t + t * t * t;
 };
-const TRANSFORM_MS = 780, GATHER_SPAN = .42, UNFOLD_DELAY = .16, GALAXY_SPIN = .045;
+const TRANSFORM_MS = 780, GATHER_SPAN = .42, UNFOLD_DELAY = .16, GALAXY_SPIN = .045, MOON_SPIN = GALAXY_SPIN * Math.sin(GALAXY_TILT);
 export function createMoon(host: HTMLElement, options: Options): MoonScene {
   const renderer = new WebGLRenderer({ alpha: true, antialias: false, powerPreference: 'low-power' });
   renderer.setClearColor(new Color('#050505'), 0);
@@ -53,7 +53,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
   const uniforms = {
     uArrival: { value: options.arrival ? 0 : 1 }, uProgress: { value: 0 },
     uPointer: { value: new Vector2(5, 5) }, uDpr: { value: renderer.getPixelRatio() }, uAtlas: { value: texture },
-    uGalaxy: { value: options.galaxy ? 1 : 0 }, uGather: { value: 0 }, uSpin: { value: 0 }, uRelease: { value: 0 },
+    uGalaxy: { value: options.galaxy ? 1 : 0 }, uGather: { value: 0 }, uSpin: { value: 0 }, uMoonSpin: { value: 0 }, uRelease: { value: 0 },
     uScoreScale: { value: 1 },
   };
   const material = new ShaderMaterial({ transparent: true, depthWrite: false, uniforms,
@@ -67,6 +67,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
       uniform float uGalaxy;
       uniform float uGather;
       uniform float uSpin;
+      uniform float uMoonSpin;
       uniform float uRelease;
       uniform float uScoreScale;
       uniform vec2 uPointer;
@@ -74,6 +75,13 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
       varying float vSeed;
       varying float vSpread;
       varying float vAlpha;
+      vec3 turn(vec3 q) {
+        float tilt = .22;
+        float ct = cos(tilt), st = sin(tilt);
+        q = vec3(q.x, ct * q.y - st * q.z, st * q.y + ct * q.z);
+        float cs = cos(uMoonSpin), ss = sin(uMoonSpin);
+        return vec3(cs * q.x - ss * q.z, q.y, ss * q.x + cs * q.z);
+      }
       vec3 disk(vec3 q) {
         float cs = cos(uSpin), ss = sin(uSpin);
         q = vec3(cs * q.x - ss * q.z, q.y, ss * q.x + cs * q.z);
@@ -88,8 +96,9 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
         float settle = clamp((uProgress - .3 - lane * .17) / .1, 0., 1.);
         float hold = 1. - smoothstep(.015, .2, uRelease);
         float g = smoothstep(0., 1., clamp(uGalaxy * 1.3 - seed * .3, 0., 1.)) * hold;
-        vec3 p = position;
-        vec3 grid = vec3(floor(p.xy * 11.) / 11., 0.);
+        vec3 body = turn(position);
+        vec3 p = body;
+        vec3 grid = vec3(floor(position.xy * 11.) / 11., 0.);
         p = mix(grid, p, smoothstep(0., 1., uArrival));
         vec3 star = disk(galaxy.xyz);
         p = mix(p, star, g) * (1. - uGather * hold);
@@ -105,7 +114,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
         vec4 mv = modelViewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
         gl_PointSize = mix((2.4 + seed * 3.4) * mix(1., .55 + galaxy.w * .6, g), 2., spread) * uDpr * (4. / -mv.z);
-        float moon = .24 + .76 * max(0., dot(normalize(position), normalize(vec3(-.6,.7,1.))));
+        float moon = .24 + .76 * max(0., dot(normalize(body), normalize(vec3(-.6,.7,1.))));
         vLight = mix(mix(moon, galaxy.w, g), .55, spread);
         vSeed = seed;
         vSpread = spread;
@@ -141,6 +150,8 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
     }
     uniforms.uGalaxy.value = morph; uniforms.uGather.value = gather;
     uniforms.uSpin.value = (uniforms.uSpin.value + dt / 1000 * GALAXY_SPIN * morph) % (Math.PI * 2);
+    const moonLive = (1 - morph) * (1 - Math.min(1, uniforms.uProgress.value / .4));
+    uniforms.uMoonSpin.value = (uniforms.uMoonSpin.value + dt / 1000 * MOON_SPIN * moonLive) % (Math.PI * 2);
   };
   const pointer = new Vector2(5, 5), rotation = new Vector2();
   const resize = () => {

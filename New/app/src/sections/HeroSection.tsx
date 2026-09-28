@@ -14,12 +14,18 @@ const CAPTIONS = {
   score: { zh: '月色入谱', en: 'Moonlight enters the score.' },
 } as const;
 const MOON_RELEASE_END = .24, SCORE_START = .32, MOON_CAPTION_START = .14, SCORE_CAPTION_START = .58;
+const HINT_KEY = 'moqian:moon-hint-seen';
+const readHintPending = () => { try { return localStorage.getItem(HINT_KEY) !== 'true'; } catch { return true; } };
 
 export default function HeroSection() {
   const root = useRef<HTMLElement>(null), art = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), host = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<MoonScene | undefined>(undefined);
   const [galaxy, setGalaxy] = useState(true);
   const [scrollPhase, setScrollPhase] = useState<'top' | 'moon' | 'score'>('top');
+  const [settled, setSettled] = useState(false);
+  const [hintOffered] = useState(readHintPending);
+  const [hintPending, setHintPending] = useState(hintOffered);
+  const [announcement, setAnnouncement] = useState('');
   const galaxyRef = useRef(galaxy);
   const { reduced, quality } = useMotionPolicy();
   useEffect(() => { galaxyRef.current = galaxy; sceneRef.current?.galaxy(galaxy); }, [galaxy]);
@@ -64,7 +70,7 @@ export default function HeroSection() {
     const observer = new IntersectionObserver(entries => { visible = entries[0].isIntersecting; pause(); }); observer.observe(section);
     const resize = new ResizeObserver(() => scene?.resize()); resize.observe(container);
     document.addEventListener('visibilitychange', pause);
-    const fail = () => { delete artwork.dataset.loading; delete artwork.dataset.ready; artwork.dataset.fallback = 'true'; sceneRef.current = undefined; if (progress >= MOON_CAPTION_START) setScrollPhase('moon'); };
+    const fail = () => { setSettled(true); delete artwork.dataset.loading; delete artwork.dataset.ready; artwork.dataset.fallback = 'true'; sceneRef.current = undefined; if (progress >= MOON_CAPTION_START) setScrollPhase('moon'); };
     const frame = requestAnimationFrame(() => {
       import('@/graphics/livingMoon').then(({ createMoon }) => {
         if (disposed) return;
@@ -73,7 +79,7 @@ export default function HeroSection() {
         artwork.dataset.arrival = String(arrival);
         try {
           scene = createMoon(container, { mobile: quality !== 'desktop', arrival, galaxy: galaxyRef.current, surface,
-            onReady: () => { delete artwork.dataset.loading; artwork.dataset.ready = 'true'; },
+            onReady: () => { delete artwork.dataset.loading; artwork.dataset.ready = 'true'; setSettled(true); },
             onFallback: () => { fail(); scene?.dispose(); },
           });
           sceneRef.current = scene; scene.galaxy(galaxyRef.current); apply(); pause();
@@ -87,6 +93,15 @@ export default function HeroSection() {
     };
   }, [reduced, quality]);
   const mode = scrollPhase === 'top' ? galaxy ? 'galaxy' : 'moon' : scrollPhase;
+  const showHint = hintPending && scrollPhase === 'top' && (reduced || settled);
+  const toggleMoon = () => {
+    const next = !galaxy;
+    setGalaxy(next);
+    setAnnouncement(`已切换至${next ? '星河' : '月亮'}：${CAPTIONS[next ? 'galaxy' : 'moon'].zh}`);
+    if (!hintPending) return;
+    setHintPending(false);
+    try { localStorage.setItem(HINT_KEY, 'true'); } catch { void 0; }
+  };
   return <section id="prelude" ref={root} className="living-prelude">
     <div className="prelude-heading"><span>00 / Prelude</span><span>墨浅 · A living score</span></div>
     <div className="prelude-composition">
@@ -106,9 +121,10 @@ export default function HeroSection() {
             <div ref={host} className="moon-canvas" />
             <LunarScore />
           </div>
-          <button type="button" className="moon-toggle" aria-pressed={mode === 'galaxy'} aria-label={galaxy ? CAPTIONS.galaxy.action : CAPTIONS.moon.action} disabled={scrollPhase !== 'top'} onClick={() => setGalaxy(open => !open)} />
+          <button type="button" className="moon-toggle" aria-pressed={mode === 'galaxy'} aria-label={galaxy ? CAPTIONS.galaxy.action : CAPTIONS.moon.action} disabled={scrollPhase !== 'top'} onClick={toggleMoon} />
         </div>
-        <p className="moon-caption" aria-live="polite">
+        <p className="moon-caption">
+          {hintOffered && <small className="moon-hint" data-visible={showHint} aria-hidden="true">轻触月相 · tap the moon</small>}
           {(['galaxy', 'moon', 'score'] as const).map(key => <span key={key} data-active={key === mode} aria-hidden={key !== mode}>
             <span lang="zh-CN">{CAPTIONS[key].zh}</span><span lang="en">{CAPTIONS[key].en}</span>
           </span>)}
@@ -116,5 +132,6 @@ export default function HeroSection() {
       </div>
     </div>
     <div className="prelude-baseline" aria-hidden="true"><span>文字 · 创意 · 练习</span><span>Scroll to unfold ↓</span></div>
+    <p className="sr-only" aria-live="polite">{announcement}</p>
   </section>;
 }

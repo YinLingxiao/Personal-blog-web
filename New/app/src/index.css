@@ -1,3 +1,5 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -22,15 +24,14 @@
 
 @layer base {
   :root {
-    --bg: #050505;
-    --bg-card: #0A0A0A;
-    --bg-elevated: #0D0D0D;
-    --fg: #E5E5E5;
+    --bg: var(--ground);
+    --bg-card: var(--surface);
+    --bg-elevated: var(--surface-2);
     --fg-muted: #8C8C8C;
-    --fg-dim: #6B6B6B;
-    --border: #1A1A1A;
-    --border-hover: #404040;
-    --border-light: #808080;
+    --fg-dim: var(--dim);
+    --border: var(--hairline);
+    --border-hover: var(--hairline-hover);
+    --border-light: var(--border-strong);
     --moon-glow: rgba(255, 248, 240, 0.15);
     --font-mono: 'Space Grotesk', 'Space Mono', system-ui, sans-serif;
     --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
@@ -56,13 +57,8 @@
     overflow-x: hidden;
   }
 
-  html.custom-cursor-on,
-  html.custom-cursor-on * {
-    cursor: none;
-  }
-
   ::selection {
-    background-color: var(--fg-dim);
+    background-color: #6B6B6B;
     color: #FFFFFF;
   }
 
@@ -127,8 +123,8 @@
   .quote-ide-title {
     margin-left: 0.5rem;
     font-family: var(--font-mono);
-    font-size: 0.625rem;
-    letter-spacing: 0.18em;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
     color: var(--fg-dim);
   }
 
@@ -288,8 +284,8 @@
     bottom: 1.25rem;
     max-width: calc(100% - 3.5rem);
     font-family: var(--font-mono);
-    font-size: 0.6rem;
-    letter-spacing: 0.22em;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
     line-height: 1.5;
     text-align: right;
     color: var(--fg-muted);
@@ -298,7 +294,7 @@
   .score-silhouette--card .score-label {
     right: 1.5rem;
     bottom: 1rem;
-    font-size: 0.5rem;
+    font-size: 0.6875rem;
   }
 
   /* Scrollbar styling */
@@ -415,8 +411,8 @@
     margin-top: 1.25rem;
     color: var(--fg-dim);
     font-family: var(--font-mono);
-    font-size: 0.625rem;
-    letter-spacing: 0.24em;
+    font-size: 0.6875rem;
+    letter-spacing: 0.16em;
     text-transform: uppercase;
   }
 
@@ -447,8 +443,8 @@
     flex-shrink: 0;
     color: var(--fg-muted);
     font-family: var(--font-mono);
-    font-size: 0.625rem;
-    letter-spacing: 0.18em;
+    font-size: 0.6875rem;
+    letter-spacing: 0.14em;
     text-transform: uppercase;
   }
 

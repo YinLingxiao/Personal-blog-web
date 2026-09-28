@@ -65,7 +65,7 @@ const EtudeSection: React.FC = () => {
         <div ref={contentRef} className="grid lg:grid-cols-[5fr_7fr] gap-10 lg:gap-0">
           <div className="relative lg:pr-12 lg:min-h-[22rem]">
             <span
-              className="text-[0.625rem] uppercase tracking-[0.2em]"
+              className="text-[0.6875rem] uppercase tracking-[0.16em]"
               style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
             >
               Knowledge garden · note.moqian.me
@@ -87,7 +87,7 @@ const EtudeSection: React.FC = () => {
             {digest && digest.categories.length > 0 && (
               <div className="mt-8 max-w-[24rem]">
                 <span
-                  className="block text-[0.625rem] uppercase tracking-[0.16em] mb-3"
+                  className="block text-[0.6875rem] uppercase tracking-[0.16em] mb-3"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
                 >
                   Index · 分类
@@ -107,7 +107,7 @@ const EtudeSection: React.FC = () => {
                         aria-hidden
                       />
                       <span
-                        className="text-[0.625rem] tracking-[0.12em] shrink-0"
+                        className="text-[0.6875rem] tracking-[0.12em] shrink-0"
                         style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
                       >
                         {String(category.count).padStart(2, '0')}
@@ -116,7 +116,7 @@ const EtudeSection: React.FC = () => {
                   ))}
                 </ul>
                 <p
-                  className="mt-3 text-[0.625rem] uppercase tracking-[0.16em]"
+                  className="mt-3 text-[0.6875rem] uppercase tracking-[0.16em]"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
                 >
                   {digest.total} notes in the garden
@@ -127,7 +127,7 @@ const EtudeSection: React.FC = () => {
 
           <div className="lg:pl-12 lg:border-l lg:border-[var(--border)]">
             <span
-              className="block text-[0.625rem] uppercase tracking-[0.16em] mb-4"
+              className="block text-[0.6875rem] uppercase tracking-[0.16em] mb-4"
               style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
             >
               Recent studies · 最近练习
@@ -145,7 +145,7 @@ const EtudeSection: React.FC = () => {
             {(errored || (digest && !hasItems)) && (
               <div className="py-10">
                 <span
-                  className="block text-[0.625rem] uppercase tracking-[0.22em] mb-3"
+                  className="block text-[0.6875rem] uppercase tracking-[0.16em] mb-3"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
                 >
                   Intermission · 幕间
@@ -173,7 +173,7 @@ const EtudeSection: React.FC = () => {
                         style={{ borderBottom: '1px solid var(--border)' }}
                       >
                         <span
-                          className="text-[0.625rem] tracking-[0.16em]"
+                          className="text-[0.6875rem] tracking-[0.16em]"
                           style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
                         >
                           {String(index + 1).padStart(2, '0')}
@@ -187,7 +187,7 @@ const EtudeSection: React.FC = () => {
                           </span>
                           {note.tags && note.tags.length > 0 && (
                             <span
-                              className="block mt-1 text-[0.625rem] tracking-[0.12em]"
+                              className="block mt-1 text-[0.6875rem] tracking-[0.12em]"
                               style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
                             >
                               {note.tags.join(' · ')}
@@ -196,7 +196,7 @@ const EtudeSection: React.FC = () => {
                         </span>
                         {note.kind && (
                           <span
-                            className="text-[0.625rem] tracking-[0.12em] whitespace-nowrap"
+                            className="text-[0.6875rem] tracking-[0.12em] whitespace-nowrap"
                             style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
                           >
                             {note.kind}

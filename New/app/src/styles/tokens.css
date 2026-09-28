@@ -1,0 +1,12 @@
+:root {
+  --ground: #050505;
+  --surface: #0a0a0a;
+  --surface-2: #0d0d0d;
+  --fg: #e9e6df;
+  --muted: #a8a59f;
+  --dim: #8C8A85;
+  --faint: #555555;
+  --hairline: #1a1a1a;
+  --hairline-hover: #404040;
+  --border-strong: #808080;
+}

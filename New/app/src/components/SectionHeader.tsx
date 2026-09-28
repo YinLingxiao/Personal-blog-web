@@ -12,7 +12,7 @@ const SectionHeader: React.FC<SectionHeaderProps> = ({ number, title, subtitle, 
   return (
     <div className={`mb-10 ${className}`}>
       <p
-        className="flex items-center gap-3 text-[0.625rem] uppercase tracking-[0.2em] mb-4"
+        className="flex items-center gap-3 text-[0.6875rem] uppercase tracking-[0.16em] mb-4"
         style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
       >
         <span>{number}</span>

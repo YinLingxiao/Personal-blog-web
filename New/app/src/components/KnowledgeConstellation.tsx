@@ -6,7 +6,7 @@ export default function KnowledgeConstellation({ notes, categories, base, active
   const positions = items.map((n, i) => ({ ...n, x: 218 + (i % 2) * 132, y: 48 + i * 54 }));
   const categoryPositions = groups.map((name, i) => ({ name, x: 65 + (i % 2) * 36, y: 72 + i * (210 / Math.max(1, groups.length - 1)) }));
   return <div className="knowledge-constellation">
-    <svg viewBox="0 0 440 340" role="group" aria-label="最近笔记与分类的星图">
+    <svg viewBox="0 0 440 340" aria-hidden="true">
       <g aria-hidden="true" className="constellation-orbit"><circle cx="215" cy="170" r="140"/><path d="M10 170H430M215 10V330" /></g>
       {positions.map(n => {
         const cat = categoryPositions.find(c => c.name === n.category);
@@ -17,7 +17,7 @@ export default function KnowledgeConstellation({ notes, categories, base, active
         <text x={c.x} y={c.y + 29} textAnchor="middle">{c.name} · {categories.find(x => x.name === c.name)?.count ?? 0}</text>
       </g>)}
       {positions.map((n, i) => <a key={n.id} href={`${base}/post/${encodeURIComponent(n.id)}`} target="_blank" rel="noopener noreferrer"
-        aria-label={n.title} className={`constellation-note ${active === n.id ? 'is-active' : ''}`}
+        tabIndex={-1} aria-hidden="true" className="constellation-note" data-active={active === n.id || undefined}
         onPointerEnter={() => onActive(n.id)} onPointerLeave={() => onActive(null)} onFocus={() => onActive(n.id)} onBlur={() => onActive(null)}>
         <circle className="constellation-hit" cx={n.x} cy={n.y} r="22"/><circle className="constellation-halo" cx={n.x} cy={n.y} r="12"/>
         <circle className="constellation-core" cx={n.x} cy={n.y} r="3.5"/>

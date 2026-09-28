@@ -136,7 +136,7 @@ export default function NoteLayout() {
                 }}
                 aria-pressed={viewMode === m}
                 className={`font-serif-cn px-3 py-1.5 text-xs rounded-md transition-colors ${
-                  viewMode === m ? 'text-[#e0e0e0] bg-white/[0.06]' : 'text-[#555] hover:text-[#999]'
+                  viewMode === m ? 'text-[#e0e0e0] bg-white/[0.06]' : 'text-[color:var(--faint)] hover:text-[#999]'
                 }`}
               >
                 {m === 'editor' ? headerConfig.editorViewLabel : headerConfig.graphViewLabel}
@@ -250,7 +250,7 @@ export default function NoteLayout() {
         href="https://beian.miit.gov.cn/"
         target="_blank"
         rel="noopener noreferrer"
-        className="fixed bottom-2 right-3 z-20 text-[10px] tracking-wider text-[#555] hover:text-[#999] transition-colors font-sans"
+        className="fixed bottom-2 right-3 z-20 text-[10px] tracking-wider text-[color:var(--faint)] hover:text-[#999] transition-colors font-sans"
       >
         京ICP备2026027832号
       </a>

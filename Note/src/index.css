@@ -1,3 +1,5 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 
 @media (max-width: 520px) {
@@ -13,10 +15,10 @@
 @layer base {
   :root {
     /* Aligned with Home palette */
-    --color-base: #050505;        /* was #000000 */
-    --color-foreground: #e9e6df;  /* was #e0e0e0 */
+    --color-base: var(--ground);        /* was #000000 */
+    --color-foreground: var(--fg);  /* was #e0e0e0 */
     --color-dim: #999999;
-    --color-subtle: #555555;
+    --color-subtle: var(--faint);
     --color-muted: #333333;
     /* Blog-only character: warm amber for links / accents */
     --color-accent: #c8956c;
@@ -24,7 +26,7 @@
     --color-success: #7dac5a;
     --color-danger: #c45a5a;
     --color-warning: #e0af68;
-    --color-border: #1a1a1a;
+    --color-border: var(--hairline);
 
     /* Shared with Home for brand / nav / labels */
     --font-brand: 'Great Vibes', 'Space Grotesk', serif;
@@ -225,7 +227,7 @@ body {
 .ambient-glow {
   --glow-x: 50;
   --glow-y: 50;
-  background-color: #050505;
+  background-color: var(--ground);
   background-image:
     radial-gradient(circle at calc(var(--glow-x) * 1%) calc(var(--glow-y) * 1%), rgba(180, 190, 210, 0.22) 0%, transparent 32%),
     radial-gradient(circle at calc(100% - var(--glow-x) * 0.4%) calc(100% - var(--glow-y) * 0.4%), rgba(100, 130, 180, 0.16) 0%, transparent 38%),

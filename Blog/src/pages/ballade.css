@@ -427,7 +427,7 @@
 
 .bl-feature:focus-visible,
 .bl-card:focus-visible {
-  outline: 1px solid #e9e6df;
+  outline: 1px solid var(--fg);
   outline-offset: 4px;
 }
 
@@ -558,7 +558,7 @@
   position: relative;
   margin: 0;
   overflow: hidden;
-  background: #0d0d0d;
+  background: var(--surface-2);
 }
 
 .bl-plate__cover { aspect-ratio: 16 / 9; }

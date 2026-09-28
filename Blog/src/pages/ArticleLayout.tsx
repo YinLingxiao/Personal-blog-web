@@ -45,7 +45,7 @@ export default function ArticleLayout() {
 
   return (
     <div className="min-h-screen text-[#e5e5e5]">
-      <header className="border-b border-[#1a1a1a]">
+      <header className="border-b border-[color:var(--hairline)]">
         <div className="max-w-[1200px] mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
           <BlogBrandHome />
           <div className="flex items-center gap-5">
@@ -73,7 +73,7 @@ export default function ArticleLayout() {
                 </div>
               )}
               <div
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.625rem] tracking-[0.14em] uppercase text-[#404040]"
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.625rem] tracking-[0.14em] uppercase text-[color:var(--hairline-hover)]"
                 style={{ fontFamily: 'var(--font-sans)' }}
               >
                 <time dateTime={new Date(selectedPost.updatedAt).toISOString()}>
@@ -94,18 +94,18 @@ export default function ArticleLayout() {
               <h1 className="font-serif-cn text-[1.75rem] md:text-[2.25rem] font-bold leading-[1.4] tracking-[0.01em] mt-4 text-[#e5e5e5]">
                 {selectedPost.title}
               </h1>
-              <div className="mt-8 md:mt-10 border-t border-[#1a1a1a]" />
+              <div className="mt-8 md:mt-10 border-t border-[color:var(--hairline)]" />
             </header>
 
             <PostReader key={selectedPost.id} post={selectedPost} allPosts={sorted} onNavigate={handleNavigate} />
 
             <nav
-              className="mt-16 md:mt-20 pt-6 border-t border-[#1a1a1a] flex items-start justify-between gap-6 text-[0.8125rem] leading-[1.7]"
+              className="mt-16 md:mt-20 pt-6 border-t border-[color:var(--hairline)] flex items-start justify-between gap-6 text-[0.8125rem] leading-[1.7]"
               style={{ fontFamily: 'var(--font-sans)' }}
             >
               {newerPost ? (
                 <Link to={`/post/${newerPost.id}`} className="group max-w-[45%] text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors">
-                  <span className="block text-[0.625rem] tracking-[0.16em] uppercase text-[#404040] mb-1">
+                  <span className="block text-[0.625rem] tracking-[0.16em] uppercase text-[color:var(--hairline-hover)] mb-1">
                     ← 较新一篇
                   </span>
                   {newerPost.title}
@@ -115,7 +115,7 @@ export default function ArticleLayout() {
               )}
               {olderPost ? (
                 <Link to={`/post/${olderPost.id}`} className="group max-w-[45%] text-right text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors">
-                  <span className="block text-[0.625rem] tracking-[0.16em] uppercase text-[#404040] mb-1">
+                  <span className="block text-[0.625rem] tracking-[0.16em] uppercase text-[color:var(--hairline-hover)] mb-1">
                     较旧一篇 →
                   </span>
                   {olderPost.title}
@@ -132,7 +132,7 @@ export default function ArticleLayout() {
         ) : (
           <div className="fade-up text-center py-24">
             <span
-              className="block text-[0.625rem] uppercase tracking-[0.22em] mb-3 text-[#404040]"
+              className="block text-[0.625rem] uppercase tracking-[0.22em] mb-3 text-[color:var(--hairline-hover)]"
               style={{ fontFamily: 'var(--font-sans)' }}
             >
               Intermission · 幕间
@@ -149,9 +149,9 @@ export default function ArticleLayout() {
         )}
       </main>
 
-      <footer className="border-t border-[#1a1a1a]">
+      <footer className="border-t border-[color:var(--hairline)]">
         <div
-          className="max-w-[1200px] mx-auto px-6 md:px-8 py-6 flex justify-between items-center text-[0.625rem] tracking-[0.08em] text-[#404040]"
+          className="max-w-[1200px] mx-auto px-6 md:px-8 py-6 flex justify-between items-center text-[0.625rem] tracking-[0.08em] text-[color:var(--hairline-hover)]"
           style={{ fontFamily: 'var(--font-sans)' }}
         >
           <span>Moqian · Ballade</span>

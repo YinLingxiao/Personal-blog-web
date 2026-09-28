@@ -1,11 +1,11 @@
 :root{--motion-ease:cubic-bezier(.22,1,.36,1);--motion-control:180ms;--motion-change:400ms;--motion-arrival:700ms}
 html{scroll-padding-top:100px}
-:where(a,button,input,select,summary,[tabindex]):focus-visible{outline:1px solid #e9e6df;outline-offset:5px}
+:where(a,button,input,select,summary,[tabindex]):focus-visible{outline:1px solid var(--fg);outline-offset:5px}
 .motion-control{display:inline-flex;align-items:center;justify-content:center;gap:10px;min-height:44px;padding:8px 12px;color:#bcbab5;border:1px solid #363636;background:transparent;font:12px var(--font-mono, sans-serif);cursor:pointer;transition:border-color var(--motion-control)}
 .motion-control:hover,.motion-control:focus-visible{border-color:#c8c5bf;color:#eeeae3}
 .motion-control:disabled{cursor:default;opacity:.8}
 .motion-control>span:last-child{font-size:11px;color:#a5a39e}
-html.custom-cursor-on,html.custom-cursor-on *{cursor:none!important}
+@media(pointer:fine){html.custom-cursor-on,html.custom-cursor-on *{cursor:none!important}html.custom-cursor-on :is(textarea,[contenteditable]:not([contenteditable=false]),input:not([type=button],[type=submit],[type=reset],[type=checkbox],[type=radio],[type=range],[type=file],[type=color])){cursor:text!important}html.custom-cursor-on select{cursor:pointer!important}}
 .custom-cursor svg{transform-box:fill-box;transform-origin:center;transition:transform .25s ease}
 .custom-cursor.cursor--active svg{transform:scale(.7)}
 html[data-motion=reduced] *,html[data-motion=reduced] *::before,html[data-motion=reduced] *::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}

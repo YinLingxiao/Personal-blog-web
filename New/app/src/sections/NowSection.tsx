@@ -77,7 +77,7 @@ const NowSection: React.FC = () => {
                 style={{ borderBottom: '1px solid var(--border)' }}
               >
                 <dt
-                  className="w-[5.5rem] shrink-0 text-[0.625rem] uppercase tracking-[0.18em]"
+                  className="w-[5.5rem] shrink-0 text-[0.6875rem] uppercase tracking-[0.14em]"
                   style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
                 >
                   {entry.term}

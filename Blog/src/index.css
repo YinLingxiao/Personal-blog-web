@@ -1,3 +1,5 @@
+@import './styles/tokens.css';
+
 @tailwind base;
 
 @tailwind components;
@@ -6,16 +8,16 @@
 @layer base {
   :root {
     /* Unified with Home palette (grayscale, no accent colors) */
-    --color-base: #050505;
-    --color-card: #0a0a0a;
-    --color-elevated: #0d0d0d;
+    --color-base: var(--ground);
+    --color-card: var(--surface);
+    --color-elevated: var(--surface-2);
     --color-foreground: #e5e5e5;
     --color-dim: #8c8c8c;
-    --color-subtle: #555555;
-    --color-muted: #404040;
-    --color-border: #1a1a1a;
-    --color-border-hover: #404040;
-    --color-grid-line: #0a0a0a;
+    --color-subtle: var(--faint);
+    --color-muted: var(--hairline-hover);
+    --color-border: var(--hairline);
+    --color-border-hover: var(--hairline-hover);
+    --color-grid-line: var(--surface);
 
     --font-brand: 'Great Vibes', 'Cormorant Garamond', cursive;
     --font-display: 'Cormorant Garamond', 'Times New Roman', serif;

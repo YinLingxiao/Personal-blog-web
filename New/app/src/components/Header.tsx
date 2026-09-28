@@ -93,10 +93,8 @@ const Header: React.FC = () => {
         className="fixed top-0 left-0 w-full z-50 transition-all duration-400"
         style={{
           padding: scrolled ? '15px 32px' : '24px 32px',
-          backgroundColor: scrolled ? 'rgba(5, 5, 5, 0.9)' : 'transparent',
-          backdropFilter: scrolled ? 'blur(8px)' : 'none',
-          WebkitBackdropFilter: scrolled ? 'blur(8px)' : 'none',
-          borderBottom: scrolled ? '1px solid #1A1A1A' : '1px solid transparent',
+          backgroundColor: scrolled ? 'rgba(5, 5, 5, 0.94)' : 'transparent',
+          borderBottom: scrolled ? '1px solid var(--hairline)' : '1px solid transparent',
         }}
       >
         <div className="max-w-[1200px] mx-auto flex items-center justify-between">
@@ -138,7 +136,7 @@ const Header: React.FC = () => {
             <AuthMenu />
 
             <button
-              className="lg:hidden flex flex-col items-center justify-center w-8 h-8 gap-[5px]"
+              className="lg:hidden flex flex-col items-center justify-center w-11 h-11 gap-[5px]"
               onClick={() => setMenuOpen(!menuOpen)}
               aria-label="Toggle menu"
               aria-expanded={menuOpen}

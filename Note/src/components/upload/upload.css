@@ -1,4 +1,4 @@
-.upload-workspace { min-height: 100dvh; background: #090909; color: #e9e6df; font-family: var(--font-sans, system-ui), sans-serif; line-height: 1.6; }
+.upload-workspace { min-height: 100dvh; background: #090909; color: var(--fg); font-family: var(--font-sans, system-ui), sans-serif; line-height: 1.6; }
 .upload-workspace * { box-sizing: border-box; }
 .upload-workspace svg { flex: none; }
 .upload-shell { width: min(1120px, calc(100% - 80px)); margin-inline: auto; }
@@ -21,7 +21,7 @@
 .upload-tabs svg { width: 16px; height: 16px; }
 .upload-tabs a > span { margin-left: 12px; color: #aaa69d; font-size: 10px; }
 .upload-tabs a[aria-current="page"] { color: #f0ece4; }
-.upload-tabs a[aria-current="page"]::after { content: ''; position: absolute; bottom: -1px; height: 2px; background: #e9e6df; left: 0; right: 0; }
+.upload-tabs a[aria-current="page"]::after { content: ''; position: absolute; bottom: -1px; height: 2px; background: var(--fg); left: 0; right: 0; }
 .upload-layout { display: grid; grid-template-columns: minmax(0, 1fr) 272px; gap: 64px; padding-top: 36px; }
 .upload-editor { min-width: 0; }
 .upload-editor fieldset { border: 0; padding: 0; margin: 0; min-width: 0; }
@@ -59,7 +59,7 @@
 .upload-submit > div { min-width: 0; }
 .upload-submit p { margin-top: 7px; color: #c5c0b5; font-size: 12px; overflow-wrap: anywhere; }
 .upload-submit p span { color: #aaa69d; margin-inline: 4px; }
-.upload-button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; border: 1px solid #e9e6df; border-radius: 4px; background: #e9e6df; color: #151513; font: inherit; font-size: 13px; flex: none; transition: background .2s; }
+.upload-button { display: inline-flex; min-height: 46px; align-items: center; justify-content: center; gap: 10px; padding: 10px 20px; border: 1px solid var(--fg); border-radius: 4px; background: var(--fg); color: #151513; font: inherit; font-size: 13px; flex: none; transition: background .2s; }
 .upload-button svg { width: 16px; height: 16px; }
 .upload-button:hover:not(:disabled) { background: #fffdf7; }
 .upload-button:disabled { background: #292825; border-color: #45423b; color: #a29d93; cursor: not-allowed; }

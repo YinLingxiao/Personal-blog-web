@@ -19,7 +19,7 @@ const FooterSection: React.FC = () => {
         className="text-center pt-24 md:pt-32 pb-8 md:pb-10 px-6"
       >
         <span
-          className="text-[0.625rem] uppercase tracking-[0.28em] mb-4 block"
+          className="text-[0.6875rem] uppercase tracking-[0.16em] mb-4 block"
           style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
         >
           Coda · 尾声
@@ -31,7 +31,7 @@ const FooterSection: React.FC = () => {
           静水深流
         </p>
         <span
-          className="text-[0.625rem] mt-2 block tracking-[0.05em]"
+          className="text-[0.6875rem] mt-2 block tracking-[0.05em]"
           style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
         >
           WORK SLOW, THINK DEEP
@@ -59,7 +59,7 @@ const FooterSection: React.FC = () => {
         <div className="text-center mt-10"><MotionControls /></div>
         <div className="text-center mt-12 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
           <p
-            className="text-[0.625rem] tracking-[0.2em] uppercase"
+            className="text-[0.6875rem] tracking-[0.16em] uppercase"
             style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
           >
             © {new Date().getFullYear()} Mo Qian. The Art of Less.
@@ -68,7 +68,7 @@ const FooterSection: React.FC = () => {
             href="https://beian.miit.gov.cn/"
             target="_blank"
             rel="noopener noreferrer"
-            className="inline-block mt-2 text-[0.625rem] tracking-[0.08em] transition-colors hover:text-[var(--fg)]"
+            className="inline-block mt-2 text-[0.6875rem] tracking-[0.08em] transition-colors hover:text-[var(--fg)]"
             style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
           >
             京ICP备2026027832号

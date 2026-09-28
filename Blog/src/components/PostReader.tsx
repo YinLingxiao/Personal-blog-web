@@ -55,18 +55,18 @@ export default function PostReader({ post, allPosts, onNavigate }: Props) {
 
       {(outLinks.length > 0 || backlinks.length > 0) && (
         <div
-          className="mt-12 pt-6 border-t border-[#1a1a1a] flex gap-x-8 gap-y-3 flex-wrap text-[0.75rem] leading-[1.8]"
+          className="mt-12 pt-6 border-t border-[color:var(--hairline)] flex gap-x-8 gap-y-3 flex-wrap text-[0.75rem] leading-[1.8]"
           style={{ fontFamily: 'var(--font-sans)' }}
         >
           {outLinks.length > 0 && (
             <div>
-              <span className="text-[#404040] mr-3 tracking-[0.12em]">{readerConfig.outgoingLinksLabel}</span>
+              <span className="text-[color:var(--hairline-hover)] mr-3 tracking-[0.12em]">{readerConfig.outgoingLinksLabel}</span>
               {outLinks.map((link) => (
                 <button
                   key={link.title}
                   onClick={() => onNavigate(link.title)}
                   className={`mr-3 transition-colors ${
-                    link.exists ? 'text-[#8c8c8c] hover:text-[#e5e5e5]' : 'text-[#404040] hover:text-[#555]'
+                    link.exists ? 'text-[#8c8c8c] hover:text-[#e5e5e5]' : 'text-[color:var(--hairline-hover)] hover:text-[color:var(--faint)]'
                   }`}
                 >
                   {link.title}
@@ -76,7 +76,7 @@ export default function PostReader({ post, allPosts, onNavigate }: Props) {
           )}
           {backlinks.length > 0 && (
             <div>
-              <span className="text-[#404040] mr-3 tracking-[0.12em]">{readerConfig.incomingLinksLabel}</span>
+              <span className="text-[color:var(--hairline-hover)] mr-3 tracking-[0.12em]">{readerConfig.incomingLinksLabel}</span>
               {backlinks.map((backlink) => (
                 <button
                   key={backlink.id}

@@ -75,7 +75,7 @@ const WritingsSection: React.FC = () => {
               }}
             >
               <span
-                className="block text-[0.625rem] uppercase tracking-[0.22em] mb-3"
+                className="block text-[0.6875rem] uppercase tracking-[0.16em] mb-3"
                 style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
               >
                 Intermission · 幕间
@@ -98,7 +98,7 @@ const WritingsSection: React.FC = () => {
               }}
             >
               <span
-                className="block text-[0.625rem] uppercase tracking-[0.22em] mb-3"
+                className="block text-[0.6875rem] uppercase tracking-[0.16em] mb-3"
                 style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
               >
                 Intermission · 幕间
@@ -127,7 +127,7 @@ const WritingsSection: React.FC = () => {
               }}
             >
               <span
-                className="block text-[0.625rem] uppercase tracking-[0.22em] mb-3"
+                className="block text-[0.6875rem] uppercase tracking-[0.16em] mb-3"
                 style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
               >
                 Intermission · 幕间
@@ -175,13 +175,13 @@ const WritingsSection: React.FC = () => {
                     }}
                   >
                     <span
-                      className="row-span-2 text-[0.625rem] tracking-[0.16em] pt-1"
+                      className="row-span-2 text-[0.6875rem] tracking-[0.16em] pt-1"
                       style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}
                     >
                       {String(index + 1).padStart(2, '0')}
                     </span>
                     <div
-                      className="flex items-center gap-3 text-[0.625rem] tracking-[0.12em] uppercase md:col-start-3 md:row-start-1 md:justify-self-end"
+                      className="flex items-center gap-3 text-[0.6875rem] tracking-[0.12em] uppercase md:col-start-3 md:row-start-1 md:justify-self-end"
                       style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-muted)' }}
                     >
                       <time dateTime={p.dateISO}>{p.dateLabel}</time>

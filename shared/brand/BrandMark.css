@@ -3,7 +3,7 @@
   flex: none;
   width: auto;
   overflow: visible;
-  color: #e9e6df;
+  color: var(--fg);
   transform: translateY(-1px);
 }
 
