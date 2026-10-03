@@ -1,10 +1,10 @@
 import { memo } from 'react';
-import { markField } from '@/graphics/markField';
+import { markField, markPoints } from '@/graphics/markField';
 
 let cached: string[] | undefined;
 function paths() {
   if (cached) return cached;
-  const field = markField(1700);
+  const field = markField(markPoints(2400));
   const groups = ['', '', ''];
   for (let i = 0; i < field.length; i += 4) {
     const part = Math.round(field[i + 3]);

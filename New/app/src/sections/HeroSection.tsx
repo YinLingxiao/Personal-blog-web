@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from 'react';
 import AsciiMoon from '@/components/AsciiMoon';
+import BrandMark from '@/components/brand/BrandMark';
 import StaticGalaxy from '@/components/StaticGalaxy';
 import StaticMark from '@/components/StaticMark';
 import { useMotionPolicy } from '@/components/motion/motion';
@@ -16,9 +17,9 @@ const TRANSITION_MS = 950;
 export default function HeroSection() {
   const root = useRef<HTMLElement>(null), art = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), host = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<MoonScene | undefined>(undefined);
-  const phaseRef = useRef(0), visualRef = useRef(0), animationRef = useRef(0), lockedUntil = useRef(0);
-  const wheelTime = useRef(0), wheelSum = useRef(0), touchStart = useRef<{ x: number; y: number } | null>(null);
-  const [phase, setPhase] = useState(0), [ready, setReady] = useState(false), [fallback, setFallback] = useState(false);
+  const phaseRef = useRef(0), visualRef = useRef(0), animationRef = useRef(0), lockedUntil = useRef(0), solidRef = useRef(false);
+  const wheelTime = useRef(0), wheelSum = useRef(0), touchStart = useRef<{ x: number; y: number } | null>(null), swiped = useRef(false);
+  const [phase, setPhase] = useState(0), [ready, setReady] = useState(false), [fallback, setFallback] = useState(false), [solid, setSolid] = useState(false), [logoPlay, setLogoPlay] = useState(0);
   const [announcement, setAnnouncement] = useState('');
   const { reduced, quality } = useMotionPolicy();
 
@@ -28,16 +29,19 @@ export default function HeroSection() {
     if (index === phaseRef.current) return;
     phaseRef.current = index;
     setPhase(index);
+    if (index !== 2) { solidRef.current = false; setSolid(false); }
     setAnnouncement(`已切换至${STAGES[index].label}`);
     sceneRef.current?.galaxy(index === 0);
     cancelAnimationFrame(animationRef.current);
-    const from = visualRef.current, start = performance.now(), duration = reduced ? 0 : TRANSITION_MS;
+    const from = visualRef.current, start = performance.now();
+    const duration = reduced ? 0 : index === 2 || from > 1.02 ? 1460 : TRANSITION_MS;
     lockedUntil.current = start + duration + 180;
     const tick = (time: number) => {
       const t = duration ? Math.min(1, (time - start) / duration) : 1;
       visualRef.current = from + (index - from) * (t * t * (3 - 2 * t));
       renderProgress(visualRef.current);
       if (t < 1) animationRef.current = requestAnimationFrame(tick);
+      else if (index === 2) { solidRef.current = true; setSolid(true); setLogoPlay(n => n + 1); }
     };
     animationRef.current = requestAnimationFrame(tick);
   }, [reduced, renderProgress]);
@@ -122,8 +126,17 @@ export default function HeroSection() {
           e.preventDefault(); scrollToSection('#ballade');
         }}>序幕之后，是正曲 <span aria-hidden="true">→</span></a>
       </div>
-      <div ref={art} className="moon-art" data-mode={mode} data-static={reduced || fallback}>
-        <div ref={stage} className="moon-stage" tabIndex={0} role="group" aria-label="星月动画，使用上下方向键切换阶段"
+      <div ref={art} className="moon-art" data-mode={mode} data-static={reduced || fallback} data-solid={solid}>
+        <div ref={stage} className="moon-stage" tabIndex={0} role="group" aria-label="星月动画，点击循环切换，或使用上下方向键切换阶段"
+          onPointerEnter={event => {
+            if (event.pointerType === 'touch' || !solidRef.current) return;
+            setLogoPlay(n => n + 1);
+          }}
+          onClick={() => {
+            if (swiped.current) { swiped.current = false; return; }
+            if (performance.now() < lockedUntil.current) return;
+            goTo((phaseRef.current + 1) % 3);
+          }}
           onKeyDown={event => {
             if (event.key === 'ArrowDown' || event.key === 'PageDown') { event.preventDefault(); goTo(phaseRef.current + 1); }
             if (event.key === 'ArrowUp' || event.key === 'PageUp') { event.preventDefault(); goTo(phaseRef.current - 1); }
@@ -133,13 +146,14 @@ export default function HeroSection() {
             const start = touchStart.current;
             if (!start) return;
             const dx = event.changedTouches[0].clientX - start.x, dy = event.changedTouches[0].clientY - start.y;
-            if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) goTo(phaseRef.current + (dx < 0 ? 1 : -1));
+            if (Math.abs(dx) > 48 && Math.abs(dx) > Math.abs(dy) * 1.4) { swiped.current = true; goTo(phaseRef.current + (dx < 0 ? 1 : -1)); }
             touchStart.current = null;
           }}>
           <div className="moon-visual" aria-hidden="true">
             <svg className="moon-orbits" viewBox="0 0 600 600"><circle cx="300" cy="300" r="250"/><path d="M30 300H68M532 300H570M300 30V68M300 532V570"/><circle cx="300" cy="300" r="205" strokeDasharray="1 15"/></svg>
             <div className="moon-fallback"><div className="fallback-moon"><AsciiMoon /></div><StaticGalaxy className="fallback-galaxy" /><StaticMark className="fallback-mark" /></div>
             <div ref={host} className="moon-canvas" />
+            <BrandMark className="seal-logo" autoplay={false} playSignal={logoPlay} />
           </div>
         </div>
         <p className="moon-caption">{STAGES.map((item, index) => <span key={item.key} data-active={index === phase} aria-hidden={index !== phase}>

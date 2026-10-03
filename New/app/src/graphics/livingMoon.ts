@@ -1,6 +1,7 @@
 import { BufferAttribute, BufferGeometry, CanvasTexture, Color, PerspectiveCamera, Points, Scene, ShaderMaterial, Vector2, WebGLRenderer } from 'three';
 import { GALAXY_STRIDE, GALAXY_TILT, GALAXY_TWIST, galaxyField } from './galaxyField';
-import { markField } from './markField';
+import { BRAND_MARK } from '../components/brand/brandMarkPaths';
+import { MARK_CENTER, MARK_HEIGHT, MARK_SCALE, alignMark, markField, markPoints } from './markField';
 
 export interface MoonScene {
   resize: () => void;
@@ -31,17 +32,20 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
   const camera = new PerspectiveCamera(42, 1, .1, 20);
   camera.position.z = 5;
   const count = options.mobile ? 800 : 2400;
-  const position = new Float32Array(count * 3), seeds = new Float32Array(count);
-  const mark = markField(count);
+  const position = new Float32Array(count * 3), seeds = new Float32Array(count), show = new Float32Array(count);
+  const visible = markPoints(count), markScale = 2.6 / (MARK_HEIGHT / 100);
   for (let i = 0; i < count; i++) {
-    const y = 1 - (i + .5) / count * 2, r = Math.sqrt(1 - y * y), phi = i * Math.PI * (3 - Math.sqrt(5));
+    const k = (i * 1597) % count, y = 1 - (k + .5) / count * 2, r = Math.sqrt(1 - y * y), phi = k * Math.PI * (3 - Math.sqrt(5));
     position.set([Math.cos(phi) * r * 1.3, y * 1.3, Math.sin(phi) * r * 1.3], i * 3);
     seeds[i] = ((i * 127) % 997) / 997;
+    show[i] = i < visible ? 1 : 0;
   }
+  const mark = alignMark(position, markField(count), visible, markScale);
   const geometry = new BufferGeometry();
   geometry.setAttribute('position', new BufferAttribute(position, 3));
   geometry.setAttribute('mark', new BufferAttribute(mark, 4));
   geometry.setAttribute('seed', new BufferAttribute(seeds, 1));
+  geometry.setAttribute('show', new BufferAttribute(show, 1));
   geometry.setAttribute('galaxy', new BufferAttribute(galaxyField(count), GALAXY_STRIDE));
   const atlas = document.createElement('canvas'); atlas.width = 128; atlas.height = 32;
   const ctx = atlas.getContext('2d');
@@ -61,6 +65,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
       attribute vec4 mark;
       attribute vec4 galaxy;
       attribute float seed;
+      attribute float show;
       uniform float uArrival;
       uniform float uProgress;
       uniform float uDpr;
@@ -93,7 +98,8 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
       }
       void main() {
         float part = mark.w;
-        float spread = smoothstep(0., 1., clamp((uProgress - .05 - part * .13 - seed * .06) / .2, 0., 1.));
+        float spread = clamp((uProgress - part * .14 - seed * .08) / .5, 0., 1.);
+        spread = spread * spread * (3. - 2. * spread);
         float hold = 1. - smoothstep(.015, .2, uRelease);
         float g = smoothstep(0., 1., clamp(uGalaxy * 1.3 - seed * .3, 0., 1.)) * hold;
         vec3 body = turn(position);
@@ -103,23 +109,30 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
         vec3 star = disk(galaxy.xyz);
         p = mix(p, star, g) * (1. - uGather * hold);
         p *= 1. + sin(min(uProgress, .2) * 7.85) * .06;
-        p = mix(p, mark.xyz * uMarkScale, spread);
-        p.xy += vec2(sin(uTime * .75 + seed * 31.), cos(uTime * .67 + seed * 29.)) * .004 * spread;
-        float drift = sin(3.14159 * spread);
-        p.y += drift * (seed - .5) * .3;
-        p.z += drift * .25;
+        vec3 seal = mark.xyz * uMarkScale;
+        float arc = sin(3.14159 * spread);
+        float isMoon = step(part, .5), isStar = step(.5, part) * step(part, 1.5), isRay = step(1.5, part);
+        vec3 detour = isMoon * vec3(.08, -.14, .22)
+          + isStar * vec3(-p.x * .35, -p.y * .35, .3)
+          + isRay * vec3(-p.x * .6, .3 - p.y * .4, .26);
+        detour.xy += vec2(seed - .5, fract(seed * 3.7) - .5) * .12;
+        p = mix(p, seal, spread) + detour * arc;
         vec2 delta = p.xy - uPointer;
-        float influence = exp(-dot(delta, delta) * 5.) * (1. - spread);
-        p.xy += delta * influence * .16;
-        p.z += influence * .13;
+        float influence = exp(-dot(delta, delta) * 3.4);
+        p.xy += delta * influence * .2;
+        p.z += influence * .16;
         vec4 mv = modelViewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = mix((2.4 + seed * 3.4) * mix(1., .55 + galaxy.w * .6, g), 3.1 + seed * 1.4, spread) * uDpr * (4. / -mv.z);
+        float markSize = 2.6 + seed * seed * 2.8;
+        gl_PointSize = mix((2.4 + seed * 3.4) * mix(1., .55 + galaxy.w * .6, g), markSize, spread) * (1. - arc * .3) * uDpr * (4. / -mv.z);
         float moon = .24 + .76 * max(0., dot(normalize(body), normalize(vec3(-.6,.7,1.))));
-        vLight = mix(mix(moon, galaxy.w, g), .76 + .18 * sin(uTime * 1.5 + seed * 29.), spread);
+        float shade = .58 + .42 * clamp(.5 + dot(mark.xy, vec2(-.32, .4)), 0., 1.);
+        float twinkle = .9 + .1 * sin(uTime * (.6 + seed * .9) + seed * 40.);
+        float glow = (.5 + .5 * fract(seed * 7.31)) * shade * twinkle + .22;
+        vLight = mix(mix(moon, galaxy.w, g), glow, spread) * (1. - arc * .4);
         vSeed = seed;
         vSpread = spread;
-        vAlpha = (.55 + .45 * uArrival) * mix(1., .62 + .38 * clamp(star.z * .6 + .5, 0., 1.), g);
+        vAlpha = (.55 + .45 * uArrival) * mix(1., .62 + .38 * clamp(star.z * .6 + .5, 0., 1.), g) * mix(1., show, spread);
       }
     `,
     fragmentShader: `
@@ -130,7 +143,9 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
       varying float vAlpha;
       void main() {
         float d = length(gl_PointCoord - .5);
-        float dotAlpha = 1. - smoothstep(.16, .5, d);
+        float hard = 1. - smoothstep(.16, .5, d);
+        float sealDot = 1. - smoothstep(.22, .5, d);
+        float dotAlpha = mix(hard, sealDot, vSpread);
         vec2 uv = vec2((gl_PointCoord.x + floor(vSeed * 4.)) / 4., gl_PointCoord.y);
         float glyph = texture2D(uAtlas, uv).a;
         float shape = mix(dotAlpha, glyph, step(.88, vSeed) * (1. - vSpread));
@@ -160,7 +175,23 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
     const { width, height } = host.getBoundingClientRect();
     if (!width || !height) return;
     renderer.setSize(width, height); camera.aspect = width / height; camera.updateProjectionMatrix();
-    uniforms.uMarkScale.value = Math.min(1, camera.aspect * 540 / 660) * Math.tan(21 * Math.PI / 180) * 10 / 5.4;
+    uniforms.uMarkScale.value = markScale;
+    const halfH = Math.tan(21 * Math.PI / 180) * camera.position.z;
+    const halfW = halfH * camera.aspect;
+    const scale = uniforms.uMarkScale.value;
+    const corner = (sx: number, sy: number) => {
+      const x = (sx - MARK_CENTER[0]) * MARK_SCALE / 100 * scale;
+      const y = -(sy - MARK_CENTER[1]) * MARK_SCALE / 100 * scale;
+      return [(x / halfW + 1) / 2, (1 - y / halfH) / 2];
+    };
+    const projected = [corner(0, 0), corner(BRAND_MARK.width, 0), corner(0, BRAND_MARK.height), corner(BRAND_MARK.width, BRAND_MARK.height)];
+    const left = Math.min(...projected.map(point => point[0])), right = Math.max(...projected.map(point => point[0]));
+    const top = Math.min(...projected.map(point => point[1])), bottom = Math.max(...projected.map(point => point[1]));
+    const frame = host.parentElement;
+    frame?.style.setProperty('--seal-left', `${left * 100}%`);
+    frame?.style.setProperty('--seal-top', `${top * 100}%`);
+    frame?.style.setProperty('--seal-width', `${(right - left) * 100}%`);
+    frame?.style.setProperty('--seal-height', `${(bottom - top) * 100}%`);
   };
   const fallback = () => { cancelAnimationFrame(frame); paused = true; options.onFallback(); };
   const render = (time: number) => {
@@ -170,7 +201,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
     uniforms.uTime.value = active / 1000;
     uniforms.uArrival.value = options.arrival ? Math.min(1, active / (options.mobile ? 800 : 1800)) : 1;
     uniforms.uPointer.value.lerp(pointer, .065);
-    const tilt = 1 - Math.min(1, uniforms.uProgress.value / .4);
+    const tilt = 1 - Math.min(1, uniforms.uProgress.value) * .28;
     points.rotation.x += (rotation.x * tilt - points.rotation.x) * .06;
     points.rotation.y += (rotation.y * tilt - points.rotation.y) * .06;
     try { renderer.render(scene, camera); } catch { fallback(); return; }

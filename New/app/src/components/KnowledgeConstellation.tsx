@@ -27,6 +27,7 @@ export default function KnowledgeConstellation({ notes, categories, selected, ac
   return <div className="knowledge-constellation">
     <svg viewBox="0 0 440 340" role="group" aria-label={selected ? `${selected}，${notes.length} 篇笔记的连接图` : `${categories.length} 个笔记分类的连接图`}>
       <g aria-hidden="true" className="constellation-orbit"><circle cx="215" cy="170" r="140"/><path d="M10 170H430M215 10V330" /></g>
+      <g key={selected ?? '*'} className="constellation-shift">
       {selected ? <>
         <g className="constellation-category" aria-hidden="true"><circle cx="72" cy="170" r="8"/><circle cx="72" cy="170" r="12"/><text x="72" y="200" textAnchor="middle">{selected.length > 7 ? `${selected.slice(0, 7)}…` : selected} · {notes.length}</text></g>
         {noteNodes.map(note => <g key={`edge-${note.id}`} aria-hidden="true"><path className={`constellation-edge ${active === note.id ? 'is-active' : ''}`} d={`M72,170 Q180,${note.y} ${note.x},${note.y}`} /></g>)}
@@ -47,6 +48,7 @@ export default function KnowledgeConstellation({ notes, categories, selected, ac
           <title>{category.name}</title>
         </g>)}
       </>}
+      </g>
     </svg>
     <p className="living-label">{selected ? '分类相连 · 选择星点，翻开笔记' : '分类星图 · 选择分类，查看笔记'}</p>
   </div>;

@@ -70,11 +70,13 @@ export default function EtudeSection() {
       const rows = Array.from(list.children).slice(0, 7) as HTMLElement[];
       if (rows.length < 7) return;
       const total = rows.reduce((sum, row) => sum + row.getBoundingClientRect().height, 0);
-      setListHeight(total);
+      const next = list.children[7] as HTMLElement | undefined;
+      const peek = next ? Math.min(26, next.getBoundingClientRect().height * .34) : 0;
+      setListHeight(total + peek);
     };
     const frame = requestAnimationFrame(measure);
     const observer = new ResizeObserver(measure);
-    Array.from(list.children).slice(0, 7).forEach(child => observer.observe(child));
+    Array.from(list.children).slice(0, 8).forEach(child => observer.observe(child));
     return () => { cancelAnimationFrame(frame); observer.disconnect(); };
   }, [items]);
 

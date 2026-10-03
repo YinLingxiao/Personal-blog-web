@@ -85,7 +85,8 @@ function sceneEnvironment(mobile = false, arrival = true, extra = {}) {
   const host = Object.assign(new EventTarget(), { dataset: {}, appendChild() {}, getBoundingClientRect: () => ({ width: 700, height: 600, left: 0, top: 0 }) });
   const galaxy = load('../src/graphics/galaxyField.ts', () => ({}), {});
   const mark = loadMarkField();
-  const { createMoon } = load('../src/graphics/livingMoon.ts', name => name === './galaxyField' ? galaxy : name === './markField' ? mark : three, {
+  const paths = load('../src/components/brand/brandMarkPaths.ts', () => ({}), {});
+  const { createMoon } = load('../src/graphics/livingMoon.ts', name => name === './galaxyField' ? galaxy : name === './markField' ? mark : name.endsWith('brandMarkPaths') ? paths : three, {
     devicePixelRatio: 3,
     document: { createElement: () => ({ getContext: () => ({ fillText() {} }) }) },
     requestAnimationFrame: fn => { frames.set(++nextFrame, fn); return nextFrame; }, cancelAnimationFrame: id => frames.delete(id),
@@ -114,14 +115,13 @@ test('mobile scene is lighter and a subsequent arrival starts settled', () => {
   assert.equal(records.materials[0].uniforms.uArrival.value, 1); scene.dispose();
 });
 
-test('logo field is a stable prefix that covers moon, star and ray at every particle budget', () => {
-  const { markField } = loadMarkField();
-  const full = markField(2400);
-  assert.deepEqual([...markField(800)], [...full.subarray(0, 800 * 4)]);
-  for (const count of [800, 1320, 2400]) {
-    const parts = [0, 0, 0];
+test('logo lattice survives the degraded draw range and covers moon, star and ray at every particle budget', () => {
+  const { markField, markPoints } = loadMarkField();
+  assert.ok(markPoints(2400) <= 1320);
+  for (const budget of [800, 2400]) {
+    const field = markField(budget), count = markPoints(budget), parts = [0, 0, 0];
     for (let i = 0; i < count; i++) {
-      const [x, y, z, part] = full.subarray(i * 4, i * 4 + 4);
+      const [x, y, z, part] = field.subarray(i * 4, i * 4 + 4);
       assert.ok(Number.isFinite(x + y + z));
       assert.ok(Math.abs(x) <= 1.2 && Math.abs(y) <= 1.6 && Math.abs(z) <= .05);
       parts[part]++;
