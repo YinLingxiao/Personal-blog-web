@@ -45,7 +45,7 @@ const AboutSection: React.FC = () => {
       <div className="max-w-[1200px] w-full mx-auto px-6 md:px-8">
         <div className="intro-topline">
           <div ref={headerRef}>
-            <SectionHeader number="04" title={face === 'who' ? 'Now' : 'About'} subtitle={face === 'who' ? 'Who I am' : '关于墨浅'} />
+            <SectionHeader number="01" title={face === 'who' ? 'Now' : 'About'} subtitle={face === 'who' ? 'Who I am' : '关于墨浅'} />
           </div>
           <div className="intro-tabs" role="tablist" aria-label="关于我的内容">
             <button type="button" role="tab" id="intro-who-tab" aria-controls="intro-who-panel" aria-selected={face === 'who'} tabIndex={face === 'who' ? 0 : -1} onKeyDown={event => handleTabKey(event, 'who')} onClick={() => setFace('who')}>WHO I AM</button>

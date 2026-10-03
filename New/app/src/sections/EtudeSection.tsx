@@ -83,7 +83,7 @@ export default function EtudeSection() {
   return <section id="etude" className="score-host relative py-20 md:py-28">
     <ScoreSilhouette piece="etude" variant="section" className="etude-score hidden lg:block" />
     <div className="max-w-[1200px] w-full mx-auto px-6 md:px-8">
-      <div ref={headerRef}><SectionHeader number="03" title="Étude" subtitle="笔记 · Notes & Studies" /></div>
+      <div ref={headerRef}><SectionHeader number="04" title="Étude" subtitle="笔记 · Notes & Studies" /></div>
       <div ref={contentRef} className="grid lg:grid-cols-[5fr_7fr] gap-10 lg:gap-0">
         <div className="relative lg:pr-12 lg:min-h-[22rem]">
           <span className="text-[0.6875rem] uppercase tracking-[0.16em]" style={{ fontFamily: 'var(--font-mono)', color: 'var(--fg-dim)' }}>Knowledge garden · note.moqian.me</span>

@@ -10,10 +10,10 @@ import { scrollToSection, startScroll, stopScroll } from '@/hooks/useSmoothScrol
 gsap.registerPlugin(ScrollTrigger);
 
 const NAV_LINKS = [
-  { num: '01', label: 'Ballade', href: '#ballade' },
-  { num: '02', label: 'Opus', href: '#opus' },
-  { num: '03', label: 'Étude', href: '#etude' },
-  { num: '04', label: 'About', href: '#about' },
+  { num: '01', label: 'About', href: '#about' },
+  { num: '02', label: 'Ballade', href: '#ballade' },
+  { num: '03', label: 'Opus', href: '#opus' },
+  { num: '04', label: 'Étude', href: '#etude' },
   { num: '05', label: 'Guestbook', href: '#guestbook' },
 ];
 

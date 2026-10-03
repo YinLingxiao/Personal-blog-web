@@ -51,7 +51,7 @@ export default function OpusSection() {
   return <section id="opus" className="opus-section score-host relative py-20 md:py-28">
     <ScoreSilhouette piece="opus" variant="section" />
     <div className="relative z-10 max-w-[1200px] mx-auto px-6 md:px-8">
-      <div ref={header}><SectionHeader number="02" title="Opus" subtitle="作品 · Selected Works" /></div>
+      <div ref={header}><SectionHeader number="03" title="Opus" subtitle="作品 · Selected Works" /></div>
       <div className="opus-introduction"><h3>Sonata <span>I / Solo works</span></h3>
         <p>从一个念头开始，独自完成的产品、工具与长期实验。保留个人判断，也保留不成熟的棱角。</p></div>
       <div className="project-desktop">

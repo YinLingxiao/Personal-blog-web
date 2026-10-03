@@ -29,10 +29,10 @@ const App: React.FC = () => {
       <Header />
       <main className="relative z-10">
         <HeroSection />
+        <AboutSection />
         <WritingsSection />
         <OpusSection />
         <EtudeSection />
-        <AboutSection />
         <GuestbookSection />
         <FooterSection />
       </main>
