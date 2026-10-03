@@ -1,5 +1,6 @@
 import { useEffect, useRef, memo } from 'react';
 import { useCustomCursor } from './useCustomCursor';
+import ClickConstellation from './ClickConstellation';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 import { useMotionPolicy } from './motion';
 import './motion.css';
@@ -28,6 +29,7 @@ const CustomCursorInner = memo(function CustomCursorInner() {
 
   return (
     <>
+      <ClickConstellation />
       <div
         ref={cursorRef}
         className="custom-cursor fixed top-0 left-0 pointer-events-none z-[9999] opacity-0"
