@@ -33,6 +33,7 @@ async function fixture() {
   });
   const publisher = new ContentPublisher(config);
   const app = express();
+  app.use(express.json());
   app.use("/api/admin", createAdminContentRouter(
     config,
     new ContentStore(config, database),
@@ -52,7 +53,7 @@ async function fixture() {
     database.close();
     fs.rmSync(root, { recursive: true, force: true });
   });
-  return { base: `http://127.0.0.1:${address.port}`, blog, note };
+  return { base: `http://127.0.0.1:${address.port}`, blog, note, publisher };
 }
 
 async function upload(base: string, target: "blog" | "note", slug: string, markdown: string, image?: Buffer) {
@@ -104,4 +105,26 @@ it("saves a draft note without making it public", async () => {
   const index = await fetch(`${base}/api/content/note/index.json`);
   expect(index.status).toBe(200);
   expect((await index.json() as Array<{ id: string }>).map((item) => item.id)).not.toContain("draft-note");
+});
+
+it("returns the actual published URL when a saved note gets a reserved slug prefix", async () => {
+  const { base, note, publisher } = await fixture();
+  const previous = path.join(note, "历史", "topic");
+  fs.mkdirSync(previous, { recursive: true });
+  fs.writeFileSync(path.join(previous, "index.md"), "# Old note\n");
+  await publisher.publish("note");
+  fs.rmSync(previous, { recursive: true });
+  const response = await upload(base, "note", "topic", "# New note\n");
+  expect(response.status).toBe(201);
+  expect(await response.json()).toMatchObject({ published: true, slug: "topic", publishedSlug: "数学--topic" });
+  const origin = "http://localhost:3001";
+  const csrf = await fetch(`${base}/api/admin/csrf?action=publish`, { headers: { Origin: origin } });
+  const { token } = await csrf.json() as { token: string };
+  const retry = await fetch(`${base}/api/admin/content/note/publish`, {
+    method: "POST",
+    headers: { Origin: origin, "Content-Type": "application/json", "X-CSRF-Token": token },
+    body: JSON.stringify({ slug: "topic" }),
+  });
+  expect(retry.status).toBe(200);
+  expect(await retry.json()).toMatchObject({ published: true, publishedSlug: "数学--topic" });
 });

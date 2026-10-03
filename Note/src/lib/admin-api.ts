@@ -10,6 +10,7 @@ export interface UploadResult {
   byteCount: number;
   stored: true;
   published: boolean;
+  publishedSlug?: string;
   publishFailed?: boolean;
   message: string;
 }
@@ -59,7 +60,7 @@ export async function publishSaved(target: UploadTarget, slug: string) {
   const csrf = await readResponse<{ token: string }>(await fetch(`${authBaseURL}/api/admin/csrf?action=publish`, {
     credentials: 'include',
   }));
-  return readResponse<{ published: boolean; message: string }>(await fetch(`${authBaseURL}/api/admin/content/${target}/publish`, {
+  return readResponse<{ published: boolean; publishedSlug?: string; message: string }>(await fetch(`${authBaseURL}/api/admin/content/${target}/publish`, {
     method: 'POST',
     credentials: 'include',
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.token },

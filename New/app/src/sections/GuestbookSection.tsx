@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import SectionHeader from '@/components/SectionHeader';
+import ScoreSilhouette from '@/components/ScoreSilhouette';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { authClient } from '@/lib/auth-client';
 import {
@@ -140,11 +141,12 @@ export default function GuestbookSection() {
   }
 
   return (
-    <section id="guestbook" className="relative py-20 md:py-28">
+    <section id="guestbook" className="score-host guestbook-score-host relative py-20 md:py-28">
+      <ScoreSilhouette piece="fantaisie" variant="section" className="guestbook-score" />
       <div className="max-w-[1200px] w-full mx-auto px-6 md:px-8">
         <div className="guestbook-column">
           <div ref={headerRef}>
-            <SectionHeader number="06" title="留言簿" subtitle="Guestbook" titleFont="var(--font-body)" />
+            <SectionHeader number="05" title="留言簿" subtitle="Guestbook" titleFont="var(--font-body)" />
           </div>
           <p className="guestbook-lead">来过的话，留几句话吧。</p>
           <GuestbookComposer

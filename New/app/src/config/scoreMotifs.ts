@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-export type ScorePiece = 'ballade' | 'opus' | 'sonata' | 'concerto' | 'etude';
+export type ScorePiece = 'ballade' | 'opus' | 'sonata' | 'concerto' | 'etude' | 'fantaisie';
 export type ScoreVariant = 'section' | 'card' | 'wide';
 
 type ScoreCorner = 'top-right' | 'bottom-left';
@@ -102,6 +102,18 @@ export const scoreMotifs: Record<ScorePiece, ScoreMotif> = {
       fragment('etude', 'b', 'bottom-left', '4.380',
         { bottom: '1%', left: '-3%', width: '38%' },
         { bottom: '-7%', left: '-14%', width: '88%' }),
+    ],
+  },
+  fantaisie: {
+    label: 'F. CHOPIN · FANTAISIE-IMPROMPTU · OP.66',
+    opacity: 0.11,
+    fragments: [
+      fragment('fantaisie', 'a', 'top-right', '3.563',
+        { top: '3%', right: '-6%', width: '34%' },
+        { top: '1%', right: '-16%', width: '88%' }),
+      fragment('fantaisie', 'b', 'bottom-left', '4.672',
+        { bottom: '4%', left: '-6%', width: '34%' },
+        { bottom: '1%', left: '-16%', width: '88%' }),
     ],
   },
 };

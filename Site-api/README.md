@@ -52,7 +52,9 @@ Blog 与 Note 的超管上传页分别调用：
 
 首次上线这套流程时，应一起部署新版 Home、Blog、Note 页面和 Site API，并重启 API 服务。部署的仓库必须保留 `Blog/scripts/build-notes.mjs` 与 `Note/scripts/build-notes.mjs`，供 API 在低权限账户下执行。该账户需要读取上述脚本、读写两个内容根目录，并读写 `/var/lib/moqian`（现有 systemd 服务配置已允许）。`/api/content/` 由现有 `api.moqian.me` Nginx 配置转发。旧的 `/blog/rss.xml` 和 `/rss.xml` 静态地址不会继续更新；新版页面链接到 API 的 RSS 地址。
 
-生产环境应以专用低权限账户运行 API。SQLite（含在线 WAL 备份）和两个内容根目录都需要纳入备份；发布索引可以由源文件重新生成。
+生产环境应以专用低权限账户运行 API。SQLite（含在线 WAL 备份）和两个内容根目录都需要纳入备份。笔记快照中的 `identifiers.json` 记录源文件与公开网址的对应关系，发布时沿用上一份记录，兼容新增同名文件、草稿及服务重启。应同时备份 `/var/lib/moqian/published`（或自定义的 `PUBLISHED_CONTENT_ROOT`）；其他索引与图片可以重建，但遗失标识记录可能改变旧网址。
+
+首页 Étude 区读取 `GET /api/content/note/catalog.json`。接口从当前 Note 发布快照整理完整分类与轻量笔记目录，返回 `{ total, categories, items }`；`items` 包含 `id、title、kind、category、tags、updatedAt`，不返回正文。首页构建时的备用目录使用同一份 `shared/content/note-catalog.mjs`。
 
 ## 留言簿
 

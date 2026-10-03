@@ -23,6 +23,7 @@ const ASSET_BASE = process.env.NOTE_ASSET_BASE || PROFILE.urlBase;
 const OUT_NOTES = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'index.json') : resolve(ROOT, 'src/generated/notes.json');
 const OUT_PUBLIC_POSTS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'posts') : resolve(ROOT, 'public/posts');
 const OUT_RSS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'rss.xml') : resolve(ROOT, 'public/rss.xml');
+const OUT_IDENTIFIERS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'identifiers.json') : resolve(ROOT, 'src/generated/note-identifiers.json');
 
 function escapeXml(value) {
   return String(value)
@@ -231,19 +232,55 @@ function parseDate(value) {
 
 function build() {
   console.log(`[build-notes] content=${relative(ROOT, OPUS_POSTS)}  urlBase="/"`);
-  const posts = walkPosts();
+  const posts = walkPosts().map((post) => ({
+    ...post,
+    ...parseFrontmatter(readFileSync(post.file, 'utf8')),
+    sourcePath: relative(OPUS_POSTS, post.file).replace(/\\/g, '/'),
+  })).filter((post) => post.data.draft !== true);
   const notes = [];
 
-  // Slug 是公开 URL、React key、wiki-link、graph 节点和 public/posts/<slug> 资源目录的
-  // 全局唯一标识。不同分类下的同名 bundle/文件会产生冲突，必须失败得早。
+  const previousRoot = process.env.NOTE_PREVIOUS_OUTPUT;
+  const registryPath = previousRoot ? join(previousRoot, 'identifiers.json') : OUT_IDENTIFIERS;
+  const previousIndex = previousRoot ? join(previousRoot, 'index.json') : OUT_NOTES;
+  const identifiers = new Map(existsSync(registryPath)
+    ? Object.entries(JSON.parse(readFileSync(registryPath, 'utf8')))
+    : []);
+  if (!existsSync(registryPath) && existsSync(previousIndex)) {
+    const previousNotes = JSON.parse(readFileSync(previousIndex, 'utf8'));
+    for (const post of posts) {
+      const category = post.data.category || post.folderCategory || '';
+      const previous = previousNotes.find((note) => note.id === `${post.folderCategory}--${post.slug}`)
+        || previousNotes.find((note) => note.id === post.slug && note.category === category);
+      if (previous) identifiers.set(post.sourcePath, previous.id);
+    }
+  }
+  const owners = new Map();
+  for (const [sourcePath, slug] of identifiers) {
+    if (typeof slug !== 'string' || owners.has(slug)) throw new Error('[build-notes] 笔记标识记录无效或重复');
+    owners.set(slug, sourcePath);
+  }
+  const slugCounts = new Map();
+  for (const { slug } of posts) slugCounts.set(slug, (slugCounts.get(slug) || 0) + 1);
+  const resolvedPosts = posts.map((post) => {
+    let slug = identifiers.get(post.sourcePath);
+    if (!slug) {
+      slug = (slugCounts.get(post.slug) > 1 || owners.has(post.slug)) && post.folderCategory
+        ? `${post.folderCategory}--${post.slug}`
+        : post.slug;
+      if (owners.has(slug)) throw new Error(`[build-notes] 笔记标识已被占用: ${slug}，请重命名文件或文件夹`);
+      identifiers.set(post.sourcePath, slug);
+      owners.set(slug, post.sourcePath);
+    }
+    return { ...post, baseSlug: post.slug, slug };
+  });
   const slugMap = new Map();
-  for (const { slug, file } of posts) {
+  for (const { slug, file } of resolvedPosts) {
     if (slugMap.has(slug)) {
       const first = relative(OPUS_POSTS, slugMap.get(slug));
       const second = relative(OPUS_POSTS, file);
       throw new Error(
         `[build-notes] 检测到重复 slug "${slug}":\n  - ${first}\n  - ${second}\n` +
-          `请重命名其中一个文件夹或文件，slug 不能重复。`
+          `请重命名其中一个文件夹或文件，生成的 slug 不能重复。`
       );
     }
     slugMap.set(slug, file);
@@ -252,13 +289,7 @@ function build() {
   // Clear public/posts before regenerating
   if (existsSync(OUT_PUBLIC_POSTS)) rmSync(OUT_PUBLIC_POSTS, { recursive: true, force: true });
 
-  for (const { slug, file, bundleDir, folderCategory } of posts) {
-    const raw = readFileSync(file, 'utf8');
-    const { data, body } = parseFrontmatter(raw);
-    if (data.draft === true) {
-      console.log(`[build-notes] skip draft: ${slug}`);
-      continue;
-    }
+  for (const { slug, baseSlug, file, bundleDir, folderCategory, data, body } of resolvedPosts) {
     const imgCopied = copyBundleImages(slug, bundleDir);
     let bodyOut = rewriteImagePaths(body, slug, bundleDir);
 
@@ -274,7 +305,7 @@ function build() {
         bodyOut = (nl === -1 ? '' : trimmed.slice(nl + 1)).replace(/^\n+/, '');
       }
     }
-    if (!title) title = slug;
+    if (!title) title = baseSlug;
 
     // Normalize multi-line $$...$$ blocks (Obsidian-style) into fenced-flow form
     // so remark-math doesn't mis-pair the fences and KaTeX doesn't paint the
@@ -295,6 +326,7 @@ function build() {
       : (dateResult.ok ? dateResult.ts : fileModified);
     notes.push({
       id: slug,
+      sourceSlug: baseSlug,
       title,
       content: bodyOut.trim(),
       tags: Array.isArray(data.tags) ? data.tags : [],
@@ -353,6 +385,7 @@ function build() {
     feedPath: RUNTIME_OUTPUT ? '/api/content/note/rss.xml' : '/rss.xml',
   }), 'utf8');
   console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
+  writeFileSync(OUT_IDENTIFIERS, JSON.stringify(Object.fromEntries([...identifiers].sort(([a], [b]) => a.localeCompare(b))), null, 2), 'utf8');
 }
 
 build();

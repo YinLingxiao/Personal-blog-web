@@ -1,28 +1,14 @@
 import React from 'react';
-import SectionHeader from '@/components/SectionHeader';
 import QuoteTyper from '@/components/QuoteTyper';
 import NameReveal from '@/components/NameReveal';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 
 const NowSection: React.FC = () => {
-  const headerRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeUp' });
   const cardRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeUp', delay: 0.15 });
   const quoteRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeUp', delay: 0.3 });
 
   return (
-    <section
-      id="now"
-      className="relative py-20 md:py-28"
-      style={{
-        borderTop: '1px solid var(--border)',
-        borderBottom: '1px solid var(--border)',
-      }}
-    >
-      <div className="max-w-[1200px] w-full mx-auto px-6 md:px-8">
-        <div ref={headerRef}>
-          <SectionHeader number="01" title="Now" subtitle="Who I am" />
-        </div>
-
+    <>
         <div ref={cardRef} className="now-editorial">
           <img
             src="/portrait.jpg"
@@ -96,8 +82,7 @@ const NowSection: React.FC = () => {
         <div ref={quoteRef} className="mt-10">
           <QuoteTyper />
         </div>
-      </div>
-    </section>
+    </>
   );
 };
 

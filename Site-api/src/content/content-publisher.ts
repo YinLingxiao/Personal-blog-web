@@ -10,7 +10,7 @@ import type { ContentTarget } from "./content-store.js";
 const runFile = promisify(execFile);
 const repositoryRoot = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "../../..");
 
-type PublishedItem = { id: string };
+type PublishedItem = { id: string; sourceSlug?: string; category?: string };
 
 export class ContentPublisher {
   private readonly current = new Map<ContentTarget, string>();
@@ -75,6 +75,7 @@ export class ContentPublisher {
       const prefix = target === "blog" ? "BLOG" : "NOTE";
       const script = path.join(repositoryRoot, target === "blog" ? "Blog" : "Note", "scripts", "build-notes.mjs");
       try {
+        const previousOutput = target === "note" ? await this.restore(target) : null;
         await runFile(process.execPath, [script], {
           cwd: path.dirname(script),
           env: {
@@ -83,6 +84,7 @@ export class ContentPublisher {
             [`${prefix}_OUTPUT_ROOT`]: directory,
             [`${prefix}_ASSET_BASE`]: `${this.config.authUrl}/api/content/${target}`,
             [`${prefix}_RSS_SELF`]: `${this.config.authUrl}/api/content/${target}/rss.xml`,
+            ...(target === "note" ? { NOTE_PREVIOUS_OUTPUT: previousOutput || "" } : {}),
           },
           timeout: 120_000,
           maxBuffer: 1024 * 1024,

@@ -3,12 +3,14 @@
 import { copyFileSync, existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { buildNoteCatalog } from '../../../shared/content/note-catalog.mjs';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = resolve(__dirname, '../../..');
 const PUBLIC_DIR = resolve(__dirname, '../public');
 const NOTES_SRC = resolve(REPO_ROOT, 'Note/src/generated/notes.json');
 const NOTES_OUT = resolve(PUBLIC_DIR, 'notes-latest.json');
+const NOTES_CATALOG_OUT = resolve(PUBLIC_DIR, 'notes-catalog.json');
 const BLOG_CANDIDATES = [
   resolve(REPO_ROOT, 'Blog/public/latest.json'),
   resolve(REPO_ROOT, 'Blog/dist/latest.json'),
@@ -26,6 +28,7 @@ function collectNotes() {
 
   const notes = JSON.parse(readFileSync(NOTES_SRC, 'utf8'));
   if (!Array.isArray(notes)) throw new Error('notes.json 不是数组');
+  writeFileSync(NOTES_CATALOG_OUT, `${JSON.stringify(buildNoteCatalog(notes), null, 2)}\n`);
 
   const counts = new Map();
   notes.forEach((note) => {

@@ -54,7 +54,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
     uArrival: { value: options.arrival ? 0 : 1 }, uProgress: { value: 0 },
     uPointer: { value: new Vector2(5, 5) }, uDpr: { value: renderer.getPixelRatio() }, uAtlas: { value: texture },
     uGalaxy: { value: options.galaxy ? 1 : 0 }, uGather: { value: 0 }, uSpin: { value: 0 }, uMoonSpin: { value: 0 }, uRelease: { value: 0 },
-    uMarkScale: { value: 1 },
+    uMarkScale: { value: 1 }, uTime: { value: 0 },
   };
   const material = new ShaderMaterial({ transparent: true, depthWrite: false, uniforms,
     vertexShader: `
@@ -70,6 +70,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
       uniform float uMoonSpin;
       uniform float uRelease;
       uniform float uMarkScale;
+      uniform float uTime;
       uniform vec2 uPointer;
       varying float vLight;
       varying float vSeed;
@@ -91,10 +92,8 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
         return vec3(cw * q.x - sw * q.y, sw * q.x + cw * q.y, q.z);
       }
       void main() {
-        // 按「月托星升」分段聚合：新月、星、光芒依次成形，矢量 Logo 淡入后粒子再退场
         float part = mark.w;
         float spread = smoothstep(0., 1., clamp((uProgress - .05 - part * .13 - seed * .06) / .2, 0., 1.));
-        float settle = clamp((uProgress - .52 - part * .07) / .12, 0., 1.);
         float hold = 1. - smoothstep(.015, .2, uRelease);
         float g = smoothstep(0., 1., clamp(uGalaxy * 1.3 - seed * .3, 0., 1.)) * hold;
         vec3 body = turn(position);
@@ -105,6 +104,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
         p = mix(p, star, g) * (1. - uGather * hold);
         p *= 1. + sin(min(uProgress, .2) * 7.85) * .06;
         p = mix(p, mark.xyz * uMarkScale, spread);
+        p.xy += vec2(sin(uTime * .75 + seed * 31.), cos(uTime * .67 + seed * 29.)) * .004 * spread;
         float drift = sin(3.14159 * spread);
         p.y += drift * (seed - .5) * .3;
         p.z += drift * .25;
@@ -114,12 +114,12 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
         p.z += influence * .13;
         vec4 mv = modelViewMatrix * vec4(p, 1.);
         gl_Position = projectionMatrix * mv;
-        gl_PointSize = mix((2.4 + seed * 3.4) * mix(1., .55 + galaxy.w * .6, g), 2., spread) * uDpr * (4. / -mv.z);
+        gl_PointSize = mix((2.4 + seed * 3.4) * mix(1., .55 + galaxy.w * .6, g), 3.1 + seed * 1.4, spread) * uDpr * (4. / -mv.z);
         float moon = .24 + .76 * max(0., dot(normalize(body), normalize(vec3(-.6,.7,1.))));
-        vLight = mix(mix(moon, galaxy.w, g), .7, spread);
+        vLight = mix(mix(moon, galaxy.w, g), .76 + .18 * sin(uTime * 1.5 + seed * 29.), spread);
         vSeed = seed;
         vSpread = spread;
-        vAlpha = (1. - smoothstep(0., 1., settle)) * (.55 + .45 * uArrival) * mix(1., .62 + .38 * clamp(star.z * .6 + .5, 0., 1.), g);
+        vAlpha = (.55 + .45 * uArrival) * mix(1., .62 + .38 * clamp(star.z * .6 + .5, 0., 1.), g);
       }
     `,
     fragmentShader: `
@@ -167,6 +167,7 @@ export function createMoon(host: HTMLElement, options: Options): MoonScene {
     if (disposed || paused) return;
     const dt = last ? Math.min(64, Math.max(0, time - last)) : 0;
     active += dt; advance(dt);
+    uniforms.uTime.value = active / 1000;
     uniforms.uArrival.value = options.arrival ? Math.min(1, active / (options.mobile ? 800 : 1800)) : 1;
     uniforms.uPointer.value.lerp(pointer, .065);
     const tilt = 1 - Math.min(1, uniforms.uProgress.value / .4);

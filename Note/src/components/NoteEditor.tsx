@@ -30,7 +30,7 @@ export default function NoteEditor({ note, allNotes, onNavigate }: Props) {
   const mdContent = useMemo(() => wikiLinksToMarkdown(note.content), [note.content]);
 
   return (
-    <div className="h-full flex flex-col">
+    <div className="note-editor h-full flex flex-col">
       {/* Top bar - clean and minimal */}
       <div className="flex items-center gap-2 px-4 sm:px-6 py-2.5 border-b border-white/[0.04]">
         <span className="text-[10px] tracking-widest text-[color:var(--faint)] uppercase font-serif">{editorConfig.previewLabel}</span>
@@ -45,7 +45,7 @@ export default function NoteEditor({ note, allNotes, onNavigate }: Props) {
       <div className="flex-1 overflow-y-auto">
         <article className="max-w-2xl mx-auto px-4 py-6 sm:px-8 sm:py-10">
           {/* Title */}
-          <h1 className="font-serif-cn text-xl sm:text-2xl font-semibold text-[#e0e0e0] mb-6 sm:mb-8 leading-snug tracking-wide">
+          <h1 className="font-serif-cn text-xl sm:text-2xl font-semibold text-[color:var(--fg)] mb-6 sm:mb-8 leading-snug tracking-wide">
             {note.title}
           </h1>
 

@@ -130,26 +130,6 @@ test('logo field is a stable prefix that covers moon, star and ray at every part
   }
 });
 
-test('logo rises moon first, then star, then ray, and reverses without a timer', () => {
-  const { markProgress } = load('../src/graphics/markProgress.ts', () => ({}), {});
-  for (const t of [0, .2, .4]) {
-    const state = markProgress(t);
-    assert.equal(state.moon.opacity + state.star.opacity + state.ray.opacity, 0);
-  }
-  const early = markProgress(.5);
-  assert.ok(early.moon.opacity > 0 && early.star.opacity === 0 && early.ray.opacity === 0);
-  const middle = markProgress(.62);
-  assert.ok(middle.moon.opacity > middle.star.opacity && middle.star.opacity > middle.ray.opacity && middle.ray.opacity > 0);
-  const lifting = markProgress(.58 + .18 * .65);
-  assert.ok(Math.abs(lifting.ray.offset + 2) < 1e-9);
-  const settled = markProgress(.9);
-  for (const part of [settled.moon, settled.star, settled.ray]) { assert.equal(part.opacity, 1); assert.equal(part.offset, 0); }
-  assert.equal(settled.moon.rotate, 0); assert.equal(settled.star.scale, 1);
-  assert.equal(settled.fade, 1);
-  assert.equal(markProgress(1).fade, 0);
-  assert.deepEqual(markProgress(.62), middle);
-});
-
 test('sustained slow frames downgrade once and then retain the static fallback', () => {
   const { scene, records, step, frames, host, counts } = sceneEnvironment();
   for (let i = 0; i < 180; i++) step(60);

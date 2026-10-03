@@ -55,7 +55,7 @@ export default function Sidebar({ notes, selectedId, search, onSearch, onSelect,
           aria-hidden
         />
       )}
-      <aside ref={root} className={asideClass} inert={isMobile && !open} role={isMobile && open ? 'dialog' : undefined} aria-modal={isMobile && open ? true : undefined} aria-label="笔记目录">
+      <aside ref={root} className={`note-sidebar ${asideClass}`} inert={isMobile && !open} role={isMobile && open ? 'dialog' : undefined} aria-modal={isMobile && open ? true : undefined} aria-label="笔记目录">
       <div className="h-full flex flex-col relative z-10">
         {isMobile && <button type="button" className="drawer-close" onClick={onClose} aria-label="关闭笔记目录">×</button>}
         <MoonPhase />
@@ -77,6 +77,7 @@ export default function Sidebar({ notes, selectedId, search, onSearch, onSelect,
           {sorted.map((note) => (
             <button
               key={note.id}
+              aria-current={note.id === selectedId ? 'page' : undefined}
               onClick={() => onSelect(note.id)}
               className={`w-full text-left px-3 py-2.5 rounded-lg mb-0.5 transition-all ${
                 note.id === selectedId

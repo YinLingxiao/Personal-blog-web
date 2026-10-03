@@ -2,7 +2,7 @@
 
 墨浅个人博客的独立前端项目，部署在 `moqian.me/blog/`。内容来自工作区同级的 `Opus/posts/`，构建时生成文章数据、图片资源与主页最新文章数据。
 
-博文内容仓库：[YinLingxiaoBlog](https://github.com/YinLingxiao/YinLingxiaoBlog)。当前构建仍读取本地 `Opus/posts/`，未配置仓库自动同步。
+博文内容仓库：[YinLingxiaoBlog](https://github.com/YinLingxiao/YinLingxiaoBlog)。本地 `Opus/posts/` 是该仓库的检出目录，构建从这里读取；尚未配置自动同步。
 
 ## Commands
 
@@ -30,6 +30,6 @@ npm run preview
 
 以上生成文件与 `dist/` 均不提交到仓库，`npm run generate`、`npm run dev`、`npm run check` 和 `npm run build` 会按需重建。
 
-博客支持 Markdown、KaTeX、`[[wiki link]]`、分类筛选和全文搜索。内容规范见 `Opus/CLAUDE.md`。超管可从 `/blog/admin/upload` 保存一个新的 page bundle；该操作只写入源目录，不覆盖同 slug 内容，也不自动构建或部署。
+博客支持 Markdown、KaTeX、`[[wiki link]]`、分类筛选和全文搜索。内容规范见 `Opus/CLAUDE.md`。超管可从 `/blog/admin/upload` 保存一个新的 page bundle，API 随即发布内容，无需重新构建页面；已有 slug 不会被覆盖。
 
 `npm run quality` 会依次执行 ESLint、TypeScript、Vitest 和生产构建。Blog 内部使用 `Post` 数据模型，公开文章路径与 `/blog/latest.json` 契约保持稳定。

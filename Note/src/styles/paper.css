@@ -1,0 +1,42 @@
+[data-note-theme="paper"] {
+  --ground: #f5f0e8;
+  --surface: #eee7dd;
+  --surface-2: #e6ddd0;
+  --fg: #302b25;
+  --muted: #625b52;
+  --dim: #6c645a;
+  --faint: #71685d;
+  --hairline: #d3c8b8;
+  --hairline-hover: #8b7f6d;
+  --color-base: var(--ground);
+  --color-foreground: var(--fg);
+  --color-border: var(--hairline);
+  --color-accent: #855229;
+  --color-link: #855229;
+  color: var(--fg);
+  color-scheme: light;
+}
+
+[data-note-theme="paper"] :is(.note-toolbar, .note-sidebar) {
+  background: var(--ground);
+  box-shadow: inset 0 0 0 1px var(--hairline);
+}
+[data-note-theme="paper"] :is(.note-toolbar a, .note-toolbar button, .note-sidebar button, .note-sidebar span, .note-sidebar a, .note-sidebar p) { color: var(--muted); }
+[data-note-theme="paper"] :is(.note-brand-home, .note-sidebar button[aria-current="page"]) { color: var(--fg); }
+[data-note-theme="paper"] .note-sidebar button[aria-current="page"] { background: var(--surface-2); }
+[data-note-theme="paper"] .note-sidebar input { background: var(--surface); color: var(--fg); }
+[data-note-theme="paper"] .note-sidebar input::placeholder { color: var(--dim); }
+[data-note-theme="paper"] :is(.note-toolbar button, .note-toolbar a, .note-sidebar button):hover { color: var(--fg); background: var(--surface); }
+[data-note-theme="paper"] :is(.note-editor, .md-body) :is(p, li, td, blockquote p) { color: var(--muted); }
+[data-note-theme="paper"] .note-editor :is(h1, h2, h3, h4, strong, th) { color: var(--fg); }
+[data-note-theme="paper"] .note-editor :is(span, button) { color: var(--muted); }
+[data-note-theme="paper"] .note-editor :is(hr, th, td, blockquote, [class*="border-"]) { border-color: var(--hairline); }
+[data-note-theme="paper"] .md-body :is(code, pre, th) { background: var(--surface); color: var(--fg); }
+[data-note-theme="paper"] .md-body pre code { background: transparent; }
+[data-note-theme="paper"] :is(#note-appearance, .auth-popover) { background: var(--surface); border-color: var(--hairline); }
+[data-note-theme="paper"] :is(#note-appearance button, .auth-account p, .auth-account__email, .auth-account__status, .auth-section-label, .auth-action, .auth-action__copy small) { color: var(--muted); }
+[data-note-theme="paper"] :is(.auth-account strong, .auth-action:hover) { color: var(--fg); }
+[data-note-theme="paper"] .auth-action:hover { background: var(--surface-2); }
+[data-note-theme="paper"] .graph-workspace svg text { fill: var(--muted); }
+[data-note-theme="paper"] .graph-workspace .node-outline { fill: var(--fg); stroke: var(--dim); }
+[data-note-theme="paper"] :is(.graph-breadcrumb, .graph-legend, .graph-empty) { color: var(--muted); }

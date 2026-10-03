@@ -1,33 +1,64 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import SectionHeader from '@/components/SectionHeader';
 import { useScrollAnimation } from '@/hooks/useScrollAnimation';
 import { scrollToSection } from '@/hooks/useSmoothScroll';
+import ScoreSilhouette from '@/components/ScoreSilhouette';
+import NowSection from '@/sections/NowSection';
 
 const AboutSection: React.FC = () => {
   const headerRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeUp' });
   const contentRef = useScrollAnimation<HTMLDivElement>({ animation: 'fadeUp', delay: 0.15 });
+  const [face, setFace] = useState<'who' | 'about'>('who');
+
+  useEffect(() => {
+    const showWho = () => setFace('who');
+    const hash = () => { if (location.hash === '#now' || location.hash === '#about') showWho(); };
+    window.addEventListener('moqian:show-who', showWho);
+    window.addEventListener('hashchange', hash);
+    return () => { window.removeEventListener('moqian:show-who', showWho); window.removeEventListener('hashchange', hash); };
+  }, []);
 
   const handleAnchorClick = (e: React.MouseEvent<HTMLAnchorElement>, href: string) => {
     if (e.button || e.metaKey || e.ctrlKey || e.shiftKey || e.altKey) return;
     e.preventDefault();
     scrollToSection(href);
   };
+  const handleTabKey = (event: React.KeyboardEvent<HTMLButtonElement>, current: 'who' | 'about') => {
+    if (event.key !== 'ArrowLeft' && event.key !== 'ArrowRight') return;
+    event.preventDefault();
+    const next = current === 'who' ? 'about' : 'who';
+    setFace(next);
+    document.getElementById(`intro-${next}-tab`)?.focus();
+  };
 
   return (
     <section
       id="about"
-      className="relative py-20 md:py-28"
+      className="score-host intro-section relative py-20 md:py-28"
       style={{
         borderTop: '1px solid var(--border)',
         borderBottom: '1px solid var(--border)',
       }}
     >
+      <ScoreSilhouette piece="sonata" variant="section" className="intro-score" />
+      <span id="now" className="intro-old-anchor" aria-hidden="true" />
       <div className="max-w-[1200px] w-full mx-auto px-6 md:px-8">
-        <div ref={headerRef}>
-          <SectionHeader number="05" title="About" subtitle="关于墨浅" />
+        <div className="intro-topline">
+          <div ref={headerRef}>
+            <SectionHeader number="04" title={face === 'who' ? 'Now' : 'About'} subtitle={face === 'who' ? 'Who I am' : '关于墨浅'} />
+          </div>
+          <div className="intro-tabs" role="tablist" aria-label="关于我的内容">
+            <button type="button" role="tab" id="intro-who-tab" aria-controls="intro-who-panel" aria-selected={face === 'who'} tabIndex={face === 'who' ? 0 : -1} onKeyDown={event => handleTabKey(event, 'who')} onClick={() => setFace('who')}>WHO I AM</button>
+            <button type="button" role="tab" id="intro-about-tab" aria-controls="intro-about-panel" aria-selected={face === 'about'} tabIndex={face === 'about' ? 0 : -1} onKeyDown={event => handleTabKey(event, 'about')} onClick={() => setFace('about')}>ABOUT</button>
+          </div>
         </div>
-
-        <div ref={contentRef} className="max-w-[680px]">
+        <div className="intro-window">
+        <div className="intro-faces" data-face={face}>
+          <div id="intro-who-panel" className="intro-face" data-active={face === 'who'} role="tabpanel" aria-labelledby="intro-who-tab" aria-hidden={face !== 'who'} inert={face !== 'who'}>
+            <NowSection />
+          </div>
+          <div id="intro-about-panel" className="intro-face" data-active={face === 'about'} role="tabpanel" aria-labelledby="intro-about-tab" aria-hidden={face !== 'about'} inert={face !== 'about'}>
+            <div ref={contentRef} className="max-w-[680px]">
           <p
             className="text-[1rem] leading-[2] mb-6"
             style={{ fontFamily: 'var(--font-body)', color: 'var(--fg-muted)' }}
@@ -67,6 +98,9 @@ const AboutSection: React.FC = () => {
           >
             静水深流，期望和各位在更美丽的未来相见！
           </p>
+            </div>
+          </div>
+        </div>
         </div>
       </div>
     </section>

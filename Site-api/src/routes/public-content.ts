@@ -2,6 +2,8 @@ import path from "node:path";
 import { Router, type NextFunction, type Request, type Response } from "express";
 import type { ContentPublisher } from "../content/content-publisher.js";
 import type { ContentTarget } from "../content/content-store.js";
+import fs from "node:fs/promises";
+import { buildNoteCatalog } from "../../../shared/content/note-catalog.mjs";
 
 const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif"]);
 
@@ -34,6 +36,16 @@ export function createPublicContentRouter(publisher: ContentPublisher) {
   router.get("/:target/latest.json", (req, res, next) => {
     void sendPublished(req, res, next, "latest.json");
   });
+  router.get("/note/catalog.json", async (_req, res, next) => {
+    try {
+      const directory = await publisher.directory("note");
+      const index = JSON.parse(await fs.readFile(path.join(directory, "index.json"), "utf8"));
+      res.setHeader("Cache-Control", "no-store");
+      res.json(buildNoteCatalog(index));
+    } catch (error) {
+      next(error);
+    }
+  });
   router.get("/:target/rss.xml", (req, res, next) => {
     void sendPublished(req, res, next, "rss.xml");
   });
@@ -42,7 +54,7 @@ export function createPublicContentRouter(publisher: ContentPublisher) {
     const slug = String(req.params.slug);
     const filename = String(req.params.filename);
     if ((target !== "blog" && target !== "note") ||
-      !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug) ||
+      !slug || slug.startsWith(".") || /[\u0000-\u001f\u007f/\\:]/.test(slug) || path.isAbsolute(slug) ||
       filename.startsWith(".") || filename.includes("/") || filename.includes("\\") ||
       !imageExtensions.has(path.extname(filename).toLowerCase())) {
       res.sendStatus(404);

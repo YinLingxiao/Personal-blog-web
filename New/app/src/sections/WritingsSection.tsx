@@ -62,7 +62,7 @@ const WritingsSection: React.FC = () => {
       <ScoreSilhouette piece="ballade" variant="section" />
       <div className="relative z-10 max-w-[1200px] w-full mx-auto px-6 md:px-8">
         <div ref={headerRef}>
-          <SectionHeader number="02" title="Ballade" subtitle="文章 · Essays & Writings" />
+          <SectionHeader number="01" title="Ballade" subtitle="文章 · Essays & Writings" />
         </div>
 
         <div ref={listRef} className="max-w-[920px] mx-auto">

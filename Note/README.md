@@ -2,7 +2,7 @@
 
 墨浅笔记站的独立前端项目，部署在 `note.moqian.me` 根路径。内容来自工作区同级的 `Notes/`，构建时生成站内数据与图片资源。
 
-笔记内容仓库：[YinLingxiaoNote](https://github.com/YinLingxiao/YinLingxiaoNote)。当前构建仍读取本地 `Notes/`，未配置仓库自动同步。
+笔记内容仓库：[YinLingxiaoNote](https://github.com/YinLingxiao/YinLingxiaoNote)。本地 `Notes/` 是该仓库的检出目录，构建从这里读取；尚未配置自动同步。
 
 ## Commands
 
@@ -30,6 +30,8 @@ npm run preview
 
 生成数据、复制后的图片与 `dist/` 均不提交到仓库，`npm run generate`、`npm run dev`、`npm run check` 和 `npm run build` 会按需重建。
 
-笔记支持 Markdown、KaTeX、`[[wiki link]]`、分类图谱和四种背景。内容规范见 `Notes/CLAUDE.md`。超管可从 `/admin/upload` 保存一个新的 page bundle；该操作只写入源目录，不覆盖同 slug 内容，也不自动构建或部署。
+笔记支持 Markdown、KaTeX、`[[wiki link]]`、分类图谱和四种背景。不同分类下的同名文件会以分类名区分网址；已分配的标识会保存在 `src/generated/note-identifiers.json`，新增同名文件或草稿不会改动已有网址。超管可从 `/admin/upload` 保存一个新的 page bundle，API 随即发布内容，无需重新构建页面；已有 slug 不会被覆盖。
+
+API 发布时将标识记录写入内容快照的 `identifiers.json`，后续发布与服务重启都会沿用。迁移旧快照时先从现有索引恢复标识。备份或迁移内容时应同时保留标识记录，避免重新分配已公开的网址。
 
 `npm run quality` 会依次执行 ESLint、TypeScript、Vitest 和生产构建。Note 保持独立的 `Note` 模型、依赖和生成数据，不引用 Blog 源码。

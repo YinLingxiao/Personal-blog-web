@@ -45,6 +45,7 @@ export default function NoteLayout() {
     return (saved as BgMode) || backgroundConfig.defaultMode;
   });
   const [bgColor, setBgColor] = useState(() => { try { return localStorage.getItem(BG_COLOR_KEY) || backgroundConfig.defaultSolidColor; } catch { return backgroundConfig.defaultSolidColor; } });
+  const paper = (bg === 'solid' || reduced) && bgColor.toLowerCase() === '#f5f0e8';
   const [showBgMenu, setShowBgMenu] = useState(false);
   useEffect(() => {
     if (!showBgMenu) return;
@@ -94,7 +95,7 @@ export default function NoteLayout() {
   }, [navigate]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={bg === 'solid' || reduced ? { backgroundColor: bgColor } : undefined}>
+    <div className="h-screen flex flex-col overflow-hidden" data-note-theme={paper ? 'paper' : undefined} style={bg === 'solid' || reduced ? { backgroundColor: bgColor } : undefined}>
       <div className="note-atmosphere" data-reading={viewMode === 'editor'}><Suspense fallback={null}>
         {!reduced && bg === 'silk' && <SilkCascade />}
         {!reduced && bg === 'moonlit' && <MoonlitRipple />}

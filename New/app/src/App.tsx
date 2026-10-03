@@ -8,7 +8,6 @@ import CustomCursor from '@/components/motion/CustomCursor';
 import Header from '@/components/Header';
 import ParticleBackground from '@/components/ParticleBackground';
 import HeroSection from '@/sections/HeroSection';
-import NowSection from '@/sections/NowSection';
 import WritingsSection from '@/sections/WritingsSection';
 import OpusSection from '@/sections/OpusSection';
 import EtudeSection from '@/sections/EtudeSection';
@@ -30,7 +29,6 @@ const App: React.FC = () => {
       <Header />
       <main className="relative z-10">
         <HeroSection />
-        <NowSection />
         <WritingsSection />
         <OpusSection />
         <EtudeSection />

@@ -7,6 +7,7 @@ import { useMotionPolicy } from '@/components/motion/motion';
 gsap.registerPlugin(ScrollTrigger);
 let lenisInstance: Lenis | null = null;
 export function scrollToSection(target: string | number, history = true) {
+  if (target === '#about' || target === '#now') window.dispatchEvent(new Event('moqian:show-who'));
   const el = typeof target === 'string' ? document.getElementById(target.slice(1)) : null;
   const top = typeof target === 'number' ? target : el ? window.scrollY + el.getBoundingClientRect().top - 88 : 0;
   if (history) window.history.pushState(null, '', typeof target === 'string' ? target : `${location.pathname}${location.search}`);

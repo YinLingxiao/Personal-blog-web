@@ -142,11 +142,15 @@ export function createAdminContentRouter(
       });
       try {
         const items = await publisher.publish(target);
-        const published = items.some((item) => item.id === result.slug);
+        const publishedItem = items.find((item) => target === "note"
+          ? item.sourceSlug === result.slug && item.category === result.category
+          : item.id === result.slug);
+        const published = Boolean(publishedItem);
         res.status(201).json({
           ...result,
           stored: true,
           published,
+          publishedSlug: publishedItem?.id,
           message: published ? "已保存并发布，访客现在可以看到。" : "草稿已保存，暂不公开。",
         });
       } catch (error) {
@@ -189,8 +193,9 @@ export function createAdminContentRouter(
     }
     try {
       const items = await publisher.publish(target);
-      const published = items.some((item) => item.id === slug);
-      res.json({ published, message: published ? "发布成功，访客现在可以看到。" : "草稿暂不公开。" });
+      const publishedItem = items.find((item) => target === "note" ? item.sourceSlug === slug : item.id === slug);
+      const published = Boolean(publishedItem);
+      res.json({ published, publishedSlug: publishedItem?.id, message: published ? "发布成功，访客现在可以看到。" : "草稿暂不公开。" });
     } catch (error) {
       console.error("[site-api] publication retry failed", error);
       res.status(503).json({ code: "PUBLICATION_FAILED", message: "发布仍未完成，请稍后重试。源文件已保存。" });

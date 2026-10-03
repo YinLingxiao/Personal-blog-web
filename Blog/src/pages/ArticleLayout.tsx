@@ -73,7 +73,7 @@ export default function ArticleLayout() {
                 </div>
               )}
               <div
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.625rem] tracking-[0.14em] uppercase text-[color:var(--hairline-hover)]"
+                className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.75rem] tracking-[0.14em] uppercase text-[color:var(--dim)]"
                 style={{ fontFamily: 'var(--font-sans)' }}
               >
                 <time dateTime={new Date(selectedPost.updatedAt).toISOString()}>

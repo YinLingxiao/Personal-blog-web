@@ -10,12 +10,11 @@ import { scrollToSection, startScroll, stopScroll } from '@/hooks/useSmoothScrol
 gsap.registerPlugin(ScrollTrigger);
 
 const NAV_LINKS = [
-  { num: '01', label: 'Now', href: '#now' },
-  { num: '02', label: 'Ballade', href: '#ballade' },
-  { num: '03', label: 'Opus', href: '#opus' },
-  { num: '04', label: 'Étude', href: '#etude' },
-  { num: '05', label: 'About', href: '#about' },
-  { num: '06', label: 'Guestbook', href: '#guestbook' },
+  { num: '01', label: 'Ballade', href: '#ballade' },
+  { num: '02', label: 'Opus', href: '#opus' },
+  { num: '03', label: 'Étude', href: '#etude' },
+  { num: '04', label: 'About', href: '#about' },
+  { num: '05', label: 'Guestbook', href: '#guestbook' },
 ];
 
 const Header: React.FC = () => {
