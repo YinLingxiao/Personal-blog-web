@@ -12,6 +12,7 @@ const sources = new Map([
   ['signature.css', await readFile(resolve(root, 'shared/brand/signature.css'), 'utf8')],
   ['BrandMark.tsx', await readFile(resolve(root, 'shared/brand/BrandMark.tsx'), 'utf8')],
   ['BrandMark.css', await readFile(resolve(root, 'shared/brand/BrandMark.css'), 'utf8')],
+  ['brandMarkPaths.ts', await readFile(resolve(root, 'shared/brand/brandMarkPaths.ts'), 'utf8')],
   ['wordmark-path.ts', `export const WORDMARK_PATH = ${JSON.stringify(path)};\n`],
 ]);
 

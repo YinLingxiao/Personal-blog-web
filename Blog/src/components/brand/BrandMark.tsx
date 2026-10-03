@@ -1,5 +1,6 @@
 import { memo, useEffect, useRef } from 'react';
 import type { CSSProperties } from 'react';
+import { BRAND_MARK } from './brandMarkPaths';
 import './BrandMark.css';
 
 type BrandMarkProps = {
@@ -77,10 +78,10 @@ function BrandMark({ className = '', style }: BrandMarkProps) {
   }, []);
 
   return (
-    <svg ref={rootRef} className={`brand-mark ${className}`} viewBox="0 0 100 144" fill="currentColor" aria-hidden="true" focusable="false" style={style}>
-      <path ref={rayRef} className="brand-mark__ray" d="M45 4C42 28 29 45 6 56C24 53 38 37 45 22C52 37 67 52 82 56C60 43 49 28 45 4Z" />
-      <path ref={starRef} className="brand-mark__star" d="M44 34C41 61 33 70 5 73C34 77 41 87 44 118C47 87 54 77 80 73C54 70 47 61 44 34Z" />
-      <path ref={moonRef} className="brand-mark__moon" d="M84 50C106 79 96 120 66 135C39 148 13 134 5 109C19 133 52 135 72 109C87 90 92 69 84 50Z" />
+    <svg ref={rootRef} className={`brand-mark ${className}`} viewBox={`0 0 ${BRAND_MARK.width} ${BRAND_MARK.height}`} fill="currentColor" aria-hidden="true" focusable="false" style={style}>
+      <path ref={rayRef} className="brand-mark__ray" d={BRAND_MARK.ray} />
+      <path ref={starRef} className="brand-mark__star" d={BRAND_MARK.star} />
+      <path ref={moonRef} className="brand-mark__moon" d={BRAND_MARK.moon} />
     </svg>
   );
 }

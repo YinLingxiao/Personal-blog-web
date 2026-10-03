@@ -2,18 +2,18 @@ import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import AsciiMoon from '@/components/AsciiMoon';
 import StaticGalaxy from '@/components/StaticGalaxy';
-import LunarScore from '@/components/LunarScore';
+import LunarMark from '@/components/LunarMark';
 import { useMotionPolicy } from '@/components/motion/motion';
 import { scrollToSection } from '@/hooks/useSmoothScroll';
 import type { MoonScene } from '@/graphics/livingMoon';
-import { scoreProgress } from '@/graphics/scoreProgress';
+import { markProgress } from '@/graphics/markProgress';
 
 const CAPTIONS = {
   moon: { zh: '月光落下，序曲将起', en: 'Moonlight gathers; the prelude begins.', action: '展开星河' },
   galaxy: { zh: '星河缓行，归于月华', en: 'The galaxy drifts, returning to moonlight.', action: '收拢为月' },
-  score: { zh: '月色入谱', en: 'Moonlight enters the score.' },
+  mark: { zh: '星月成印', en: 'Moon and star, set as a seal.' },
 } as const;
-const MOON_RELEASE_END = .24, SCORE_START = .32, MOON_CAPTION_START = .14, SCORE_CAPTION_START = .58;
+const MOON_RELEASE_END = .24, MARK_START = .32, MOON_CAPTION_START = .14, MARK_CAPTION_START = .58;
 const HINT_KEY = 'moqian:moon-hint-seen';
 const readHintPending = () => { try { return localStorage.getItem(HINT_KEY) !== 'true'; } catch { return true; } };
 
@@ -21,7 +21,7 @@ export default function HeroSection() {
   const root = useRef<HTMLElement>(null), art = useRef<HTMLDivElement>(null), stage = useRef<HTMLDivElement>(null), host = useRef<HTMLDivElement>(null);
   const sceneRef = useRef<MoonScene | undefined>(undefined);
   const [galaxy, setGalaxy] = useState(true);
-  const [scrollPhase, setScrollPhase] = useState<'top' | 'moon' | 'score'>('top');
+  const [scrollPhase, setScrollPhase] = useState<'top' | 'moon' | 'mark'>('top');
   const [settled, setSettled] = useState(false);
   const [hintOffered] = useState(readHintPending);
   const [hintPending, setHintPending] = useState(hintOffered);
@@ -42,26 +42,20 @@ export default function HeroSection() {
     let scene: MoonScene | undefined, disposed = false, visible = true, progress = 0;
     const hasHash = !!location.hash, pinned = !reduced && quality === 'desktop' && !hasHash;
     const apply = () => {
-      const score = pinned ? Math.max(0, Math.min(1, (progress - SCORE_START) / (1 - SCORE_START))) : Math.min(.2, progress * .2);
-      scene?.scroll(score, Math.min(1, progress / MOON_RELEASE_END));
-      const state = scoreProgress(score);
-      artwork.style.setProperty('--score-staff', String(state.staff));
-      artwork.style.setProperty('--score-clef', String(state.clefMotion.opacity * .82));
-      artwork.style.setProperty('--score-clef-rise', `${state.clefMotion.offset}px`);
-      artwork.style.setProperty('--score-glint-x', `${state.glint * 160}px`);
-      artwork.style.setProperty('--score-glint-opacity', String(Math.sin(Math.PI * state.glint) * .4));
-      artwork.style.setProperty('--score-fade', String(state.fade));
-      state.noteMotion.forEach((motion, i) => {
-        artwork.style.setProperty(`--score-note-${i}`, String(motion.opacity * .8));
-        artwork.style.setProperty(`--score-note-rise-${i}`, `${motion.offset}px`);
-        artwork.style.setProperty(`--score-stem-${i}`, String(motion.stem));
-      });
+      const mark = pinned ? Math.max(0, Math.min(1, (progress - MARK_START) / (1 - MARK_START))) : Math.min(.2, progress * .2);
+      scene?.scroll(mark, Math.min(1, progress / MOON_RELEASE_END));
+      const state = markProgress(mark), set = (name: string, value: string | number) => artwork.style.setProperty(`--mark-${name}`, String(value));
+      set('moon', state.moon.opacity); set('moon-y', `${state.moon.offset}px`); set('moon-rot', `${state.moon.rotate}deg`);
+      set('star', state.star.opacity); set('star-y', `${state.star.offset}px`); set('star-scale', state.star.scale);
+      set('ray', state.ray.opacity); set('ray-y', `${state.ray.offset}px`);
+      set('glint-x', `${state.glint * 170}px`); set('glint-opacity', Math.sin(Math.PI * state.glint));
+      set('fade', state.fade);
     };
     const trigger = ScrollTrigger.create({ trigger: section, start: 'top top',
       end: pinned ? () => `+=${innerHeight * 2.1}` : 'bottom top', pin: pinned, pinSpacing: pinned, invalidateOnRefresh: true,
       onUpdate: self => {
         progress = self.progress; apply();
-        setScrollPhase(pinned && artwork.dataset.fallback !== 'true' && progress >= SCORE_CAPTION_START ? 'score' : progress >= MOON_CAPTION_START ? 'moon' : 'top');
+        setScrollPhase(pinned && artwork.dataset.fallback !== 'true' && progress >= MARK_CAPTION_START ? 'mark' : progress >= MOON_CAPTION_START ? 'moon' : 'top');
         artwork.style.setProperty('--moon-scroll-opacity', String(pinned ? 1 : 1 - progress));
       },
     });
@@ -119,13 +113,13 @@ export default function HeroSection() {
             <svg className="moon-orbits" viewBox="0 0 600 600"><circle cx="300" cy="300" r="250"/><path d="M30 300H68M532 300H570M300 30V68M300 532V570"/><circle cx="300" cy="300" r="205" strokeDasharray="1 15"/></svg>
             <div className="moon-fallback"><div className="fallback-moon"><AsciiMoon /></div><StaticGalaxy className="fallback-galaxy" /></div>
             <div ref={host} className="moon-canvas" />
-            <LunarScore />
+            <LunarMark />
           </div>
           <button type="button" className="moon-toggle" aria-pressed={mode === 'galaxy'} aria-label={galaxy ? CAPTIONS.galaxy.action : CAPTIONS.moon.action} disabled={scrollPhase !== 'top'} onClick={toggleMoon} />
         </div>
         <p className="moon-caption">
           {hintOffered && <small className="moon-hint" data-visible={showHint} aria-hidden="true">轻触月相 · tap the moon</small>}
-          {(['galaxy', 'moon', 'score'] as const).map(key => <span key={key} data-active={key === mode} aria-hidden={key !== mode}>
+          {(['galaxy', 'moon', 'mark'] as const).map(key => <span key={key} data-active={key === mode} aria-hidden={key !== mode}>
             <span lang="zh-CN">{CAPTIONS[key].zh}</span><span lang="en">{CAPTIONS[key].en}</span>
           </span>)}
         </p>
