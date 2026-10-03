@@ -19,7 +19,8 @@ export function useScrollAnimation<T extends HTMLElement>(options: ScrollAnimati
   const { animation = 'fadeUp', delay = 0, duration = .7, y = 16, stagger = .08, triggerStart = 'top 94%', childSelector } = options;
   useEffect(() => {
     const el = ref.current;
-    if (!el || reduced) return;
+    if (!el || reduced || el.getBoundingClientRect().bottom <= 0) return;
+    if (triggerStart === 'top 94%' && el.getBoundingClientRect().top <= window.innerHeight * .94) return;
     const context = gsap.context(() => {
       const targets = childSelector ? el.querySelectorAll(childSelector) : el;
       gsap.fromTo(targets, { y: animation === 'blurReveal' ? 0 : Math.min(y, 20), opacity: 1 }, {

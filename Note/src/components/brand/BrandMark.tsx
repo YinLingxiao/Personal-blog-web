@@ -6,10 +6,13 @@ import './BrandMark.css';
 type BrandMarkProps = {
   className?: string;
   style?: CSSProperties;
+  autoplay?: boolean;
+  playSignal?: number;
 };
 
-function BrandMark({ className = '', style }: BrandMarkProps) {
+function BrandMark({ className = '', style, autoplay = true, playSignal = 0 }: BrandMarkProps) {
   const rootRef = useRef<SVGSVGElement>(null);
+  const playRef = useRef<() => void>(() => {});
   const moonRef = useRef<SVGPathElement>(null);
   const starRef = useRef<SVGPathElement>(null);
   const rayRef = useRef<SVGPathElement>(null);
@@ -30,9 +33,10 @@ function BrandMark({ className = '', style }: BrandMarkProps) {
       animations = [];
     };
     const play = () => {
-      if ((motion.matches || document.documentElement.dataset.motion === 'reduced') || animations.some(animation => animation.playState === 'running' || animation.pending)) return;
+      if (motion.matches || document.documentElement.dataset.motion === 'reduced') return;
+      if (animations.some(animation => animation.playState === 'running' || animation.pending)) return;
       settle();
-      const timing = { easing: 'cubic-bezier(.22, 1, .36, 1)', fill: 'backwards' as const };
+      const timing = { easing: 'cubic-bezier(.22, 1, .36, 1)', fill: (autoplay ? 'backwards' : 'both') as FillMode };
       animations = [
         moon.animate([
           { transform: 'translateY(4px) rotate(3deg)', opacity: 0.35 },
@@ -49,6 +53,7 @@ function BrandMark({ className = '', style }: BrandMarkProps) {
         ], { ...timing, delay: 620, duration: 1030 }),
       ];
     };
+    playRef.current = play;
     const onPointerEnter = (event: Event) => {
       if ((event as PointerEvent).pointerType !== 'touch') play();
     };
@@ -61,9 +66,11 @@ function BrandMark({ className = '', style }: BrandMarkProps) {
         observer.disconnect();
       }
     }, lockup ? { rootMargin: '0px 0px -12% 0px' } : { threshold: 0.5 });
-    observer.observe(lockup ?? root);
-    root.addEventListener('pointerenter', onPointerEnter);
-    trigger.addEventListener('focusin', play);
+    if (autoplay) observer.observe(lockup ?? root);
+    if (autoplay) {
+      root.addEventListener('pointerenter', onPointerEnter);
+      trigger.addEventListener('focusin', play);
+    }
     motion.addEventListener('change', onMotionChange);
     window.addEventListener('moqian:motion-applied', onMotionChange);
 
@@ -71,11 +78,17 @@ function BrandMark({ className = '', style }: BrandMarkProps) {
       observer.disconnect();
       root.removeEventListener('pointerenter', onPointerEnter);
       trigger.removeEventListener('focusin', play);
+      playRef.current = () => {};
       motion.removeEventListener('change', onMotionChange);
       window.removeEventListener('moqian:motion-applied', onMotionChange);
       settle();
     };
-  }, []);
+  }, [autoplay]);
+
+  useEffect(() => {
+    if (!playSignal) return;
+    playRef.current();
+  }, [playSignal]);
 
   return (
     <svg ref={rootRef} className={`brand-mark ${className}`} viewBox={`0 0 ${BRAND_MARK.width} ${BRAND_MARK.height}`} fill="currentColor" aria-hidden="true" focusable="false" style={style}>
