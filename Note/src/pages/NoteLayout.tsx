@@ -12,6 +12,7 @@ import {
 import Sidebar from '@/components/Sidebar';
 import NoteBrandHome from '@/components/NoteBrandHome';
 import AuthMenu from '@/components/AuthMenu';
+import NoteLoginGate from '@/components/NoteLoginGate';
 import { useNotes } from '@/hooks/useNotes';
 import { useIsMobile } from '@/hooks/useMediaQuery';
 
@@ -32,7 +33,7 @@ export default function NoteLayout() {
   const location = useLocation();
   const [searchParams, setSearchParams] = useSearchParams();
   const graphCategory = searchParams.get('cat');
-  const { notes, isLoading, error } = useNotes();
+  const { notes, isLoading, error, locked } = useNotes();
   const isMobile = useIsMobile();
   const [drawerOpen, setDrawerOpen] = useState(false);
   const selectedId = id ?? null;
@@ -183,7 +184,9 @@ export default function NoteLayout() {
 
           <main className="flex-1 min-w-0 overflow-hidden" inert={isMobile && drawerOpen}>
             <Suspense fallback={null}>
-              {isLoading || error ? (
+              {locked ? (
+                <NoteLoginGate />
+              ) : isLoading || error ? (
                 <div className="h-full flex items-center justify-center text-[#777] text-sm font-serif-cn">{error ? '暂时无法读取笔记，请稍后刷新重试。' : '正在打开笔记…'}</div>
               ) : viewMode === 'editor' && selectedNote ? (
                 <NoteEditor
