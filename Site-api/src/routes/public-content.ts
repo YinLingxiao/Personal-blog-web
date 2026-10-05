@@ -1,5 +1,5 @@
 import path from "node:path";
-import { Router, type NextFunction, type Request, type Response } from "express";
+import { Router, type NextFunction, type Request, type RequestHandler, type Response } from "express";
 import type { ContentPublisher } from "../content/content-publisher.js";
 import type { ContentTarget } from "../content/content-store.js";
 import fs from "node:fs/promises";
@@ -7,8 +7,18 @@ import { buildNoteCatalog } from "../../../shared/content/note-catalog.mjs";
 
 const imageExtensions = new Set([".png", ".jpg", ".jpeg", ".gif", ".webp", ".avif"]);
 
-export function createPublicContentRouter(publisher: ContentPublisher) {
+export interface PublicContentOptions {
+  requireNoteViewer?: RequestHandler;
+}
+
+export function createPublicContentRouter(publisher: ContentPublisher, options: PublicContentOptions = {}) {
   const router = Router();
+
+  // 笔记正文与配图只给已登录读者；标题目录、latest 与 RSS 仍公开，博客不受影响。
+  const guardNote: RequestHandler = (req, res, next) => {
+    if (req.params.target === "note" && options.requireNoteViewer) return options.requireNoteViewer(req, res, next);
+    next();
+  };
 
   async function sendPublished(req: Request, res: Response, next: NextFunction, filename: string) {
     const target = req.params.target as ContentTarget;
@@ -30,7 +40,7 @@ export function createPublicContentRouter(publisher: ContentPublisher) {
     }
   }
 
-  router.get("/:target/index.json", (req, res, next) => {
+  router.get("/:target/index.json", guardNote, (req, res, next) => {
     void sendPublished(req, res, next, "index.json");
   });
   router.get("/:target/latest.json", (req, res, next) => {
@@ -49,7 +59,7 @@ export function createPublicContentRouter(publisher: ContentPublisher) {
   router.get("/:target/rss.xml", (req, res, next) => {
     void sendPublished(req, res, next, "rss.xml");
   });
-  router.get("/:target/posts/:slug/:filename", async (req, res, next) => {
+  router.get("/:target/posts/:slug/:filename", guardNote, async (req, res, next) => {
     const target = req.params.target as ContentTarget;
     const slug = String(req.params.slug);
     const filename = String(req.params.filename);
@@ -62,7 +72,7 @@ export function createPublicContentRouter(publisher: ContentPublisher) {
     }
     try {
       const directory = await publisher.directory(target);
-      res.setHeader("Cache-Control", "public, max-age=300");
+      res.setHeader("Cache-Control", target === "note" ? "private, max-age=300" : "public, max-age=300");
       res.sendFile(filename, { root: path.join(directory, "posts", slug) }, (error) => {
         if (error && !res.headersSent) {
           if ("status" in error && error.status === 404) res.sendStatus(404);

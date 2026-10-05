@@ -48,7 +48,7 @@ Blog 与 Note 的超管上传页分别调用：
 
 上传文件夹必须是 `<slug>/index.md` 加同级图片，slug 仅允许小写字母、数字和单连字符；已有 slug 不会被覆盖。API 保存源文件后自动生成博客或笔记的内容索引、配图、首页摘要和 RSS，并切换公开版本。草稿（`draft: true`）只保存，不公开。发布失败时源文件仍保留，上传页提供“重试发布”。
 
-博客与笔记页面运行时从 `/api/content/blog/index.json`、`/api/content/note/index.json` 读取内容；首页从对应的 `latest.json` 读取最近内容。配图与 RSS 也由这些公开 API 提供。日常上传无需再次执行 Vite 构建，也无需复制 `dist`。页面代码或样式修改仍需构建并部署一次。
+博客与笔记页面运行时从 `/api/content/blog/index.json`、`/api/content/note/index.json` 读取内容；首页从对应的 `latest.json` 读取最近内容。配图与 RSS 也由这些 API 提供。笔记正文 `note/index.json` 与笔记配图 `note/posts/*` 需登录（任意已登录账户，匿名返回 401），笔记站对匿名访客显示登录提示；笔记的 `catalog.json`、`latest.json`、`rss.xml` 与博客全部内容仍公开。日常上传无需再次执行 Vite 构建，也无需复制 `dist`。页面代码或样式修改仍需构建并部署一次。
 
 首次上线这套流程时，应一起部署新版 Home、Blog、Note 页面和 Site API，并重启 API 服务。部署的仓库必须保留 `Blog/scripts/build-notes.mjs` 与 `Note/scripts/build-notes.mjs`，供 API 在低权限账户下执行。该账户需要读取上述脚本、读写两个内容根目录，并读写 `/var/lib/moqian`（现有 systemd 服务配置已允许）。`/api/content/` 由现有 `api.moqian.me` Nginx 配置转发。旧的 `/blog/rss.xml` 和 `/rss.xml` 静态地址不会继续更新；新版页面链接到 API 的 RSS 地址。
 

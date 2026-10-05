@@ -6,6 +6,7 @@ import { providerStatus, type SiteAuth } from "./auth.js";
 import { ContentStore } from "./content/content-store.js";
 import { ContentPublisher } from "./content/content-publisher.js";
 import { createRequireSuperAdmin } from "./middleware/require-super-admin.js";
+import { createRequireUser } from "./middleware/require-user.js";
 import { createAdminRateLimit } from "./middleware/rate-limit.js";
 import { createAdminContentRouter } from "./routes/admin-content.js";
 import { createPublicContentRouter } from "./routes/public-content.js";
@@ -61,7 +62,7 @@ export function createApp(config: RuntimeConfig, auth: SiteAuth, database: Datab
     createRequireSuperAdmin(auth),
     createAdminRateLimit(config.upload.attemptsPerHour),
   ));
-  app.use("/api/content", createPublicContentRouter(publisher));
+  app.use("/api/content", createPublicContentRouter(publisher, { requireNoteViewer: createRequireUser(auth) }));
   app.use("/api/session", createSessionRouter(config, auth));
   app.use("/api/guestbook", createGuestbookRouter(config, auth, database));
 
