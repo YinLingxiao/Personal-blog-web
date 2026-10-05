@@ -33,7 +33,7 @@ export function createApp(config: RuntimeConfig, auth: SiteAuth, database: Datab
       if (!origin || config.trustedOrigins.includes(origin)) callback(null, true);
       else callback(null, false);
     },
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allowedHeaders: ["Content-Type", "Authorization", "X-CSRF-Token", "X-Request-ID"],
     credentials: true,
     maxAge: 86400,
@@ -48,13 +48,7 @@ export function createApp(config: RuntimeConfig, auth: SiteAuth, database: Datab
 
   const store = new ContentStore(config, database);
   const publisher = new ContentPublisher(config);
-  setImmediate(() => {
-    try {
-      store.cleanupStaging();
-    } catch (error) {
-      console.error("[site-api] staging cleanup failed", error);
-    }
-  });
+  store.cleanupStaging();
   app.use("/api/admin", createAdminContentRouter(
     config,
     store,

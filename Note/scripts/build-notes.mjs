@@ -22,7 +22,7 @@ const RUNTIME_OUTPUT = process.env.NOTE_OUTPUT_ROOT ? resolve(process.env.NOTE_O
 const ASSET_BASE = process.env.NOTE_ASSET_BASE || PROFILE.urlBase;
 const OUT_NOTES = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'index.json') : resolve(ROOT, 'src/generated/notes.json');
 const OUT_PUBLIC_POSTS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'posts') : resolve(ROOT, 'public/posts');
-const OUT_RSS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'rss.xml') : resolve(ROOT, 'public/rss.xml');
+const OUT_RSS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'rss.xml') : null;
 const OUT_IDENTIFIERS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'identifiers.json') : resolve(ROOT, 'src/generated/note-identifiers.json');
 
 function escapeXml(value) {
@@ -161,7 +161,7 @@ function scanDir(dir, folderCategory, out) {
 }
 
 function copyBundleImages(slug, bundleDir) {
-  if (!bundleDir) return;
+  if (!bundleDir || !RUNTIME_OUTPUT) return;
   const dest = join(OUT_PUBLIC_POSTS, slug);
   let copied = 0;
   for (const f of readdirSync(bundleDir)) {
@@ -377,14 +377,16 @@ function build() {
     category: note.category,
     description: note.summary || plainExcerpt(note.content),
   }));
-  mkdirSync(dirname(OUT_RSS), { recursive: true });
-  writeFileSync(OUT_RSS, buildRss({
-    items: feedItems,
-    feed: PROFILE.feed,
-    urlBase: PROFILE.urlBase,
-    feedPath: RUNTIME_OUTPUT ? '/api/content/note/rss.xml' : '/rss.xml',
-  }), 'utf8');
-  console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
+  if (OUT_RSS) {
+    mkdirSync(dirname(OUT_RSS), { recursive: true });
+    writeFileSync(OUT_RSS, buildRss({
+      items: feedItems,
+      feed: PROFILE.feed,
+      urlBase: PROFILE.urlBase,
+      feedPath: '/api/content/note/rss.xml',
+    }), 'utf8');
+    console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
+  }
   writeFileSync(OUT_IDENTIFIERS, JSON.stringify(Object.fromEntries([...identifiers].sort(([a], [b]) => a.localeCompare(b))), null, 2), 'utf8');
 }
 

@@ -9,6 +9,8 @@ import CustomCursor from '@/components/motion/CustomCursor';
 const BlogHome = lazy(() => import('./pages/BlogHome'));
 const ArticleLayout = lazy(() => import('./pages/ArticleLayout'));
 const AdminUpload = lazy(() => import('./pages/AdminUpload'));
+const AdminPosts = lazy(() => import('./pages/AdminPosts'));
+const AdminEditPost = lazy(() => import('./pages/AdminEditPost'));
 const NotFound = lazy(() => import('./pages/NotFound'));
 
 export default function App() {
@@ -24,6 +26,8 @@ export default function App() {
           <Route path="/" element={<BlogHome />} />
           <Route path="/post/:id" element={<ArticleLayout />} />
           <Route path="/admin/upload" element={<AdminUpload />} />
+          <Route path="/admin/posts" element={<AdminPosts />} />
+          <Route path="/admin/posts/:slug/edit" element={<AdminEditPost />} />
           <Route path="*" element={<NotFound />} />
         </Routes></div>
       </Suspense>

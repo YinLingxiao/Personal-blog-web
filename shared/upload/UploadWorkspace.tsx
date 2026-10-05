@@ -8,7 +8,7 @@ import { AdminApiError, publishSaved, uploadFolder, type UploadResult, type Uplo
 import { formatBytes, validateFiles } from './validation';
 import './upload.css';
 
-export default function UploadWorkspace({ target, brand, categories }: { target: UploadTarget; brand: ReactNode; categories: string[] }) {
+export default function UploadWorkspace({ target, brand, categories, managementHref, onExisting }: { target: UploadTarget; brand: ReactNode; categories: string[]; managementHref?: string; onExisting?: (files: File[], category: string) => void }) {
   const isBlog = target === 'blog';
   const noun = isBlog ? '博文' : '笔记';
   const destination = isBlog ? '博客' : '笔记站';
@@ -17,6 +17,7 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
   const [files, setFiles] = useState<File[]>([]);
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [duplicate, setDuplicate] = useState(false);
   const [result, setResult] = useState<UploadResult | null>(null);
   const fileInput = useRef<HTMLInputElement>(null);
   const successHeading = useRef<HTMLHeadingElement>(null);
@@ -44,6 +45,7 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
     setFiles([]);
     setResult(null);
     setError('');
+    setDuplicate(false);
     if (fileInput.current) fileInput.current.value = '';
   }
 
@@ -52,10 +54,12 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
     if (validation || !category.trim() || busy || result) return;
     setBusy(true);
     setError('');
+    setDuplicate(false);
     try {
       setResult(await uploadFolder(target, category.trim(), files));
     } catch (cause) {
       setError(cause instanceof AdminApiError ? cause.message : '暂时无法保存，请检查网络后重试');
+      setDuplicate(cause instanceof AdminApiError && cause.code === 'SLUG_EXISTS');
     } finally {
       setBusy(false);
     }
@@ -77,7 +81,7 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
 
   return <div className={`upload-workspace upload-workspace--${target}`}>
     <header className="upload-header"><div className="upload-shell upload-header__inner">
-      {brand}<div className="upload-header__actions"><Link to="/" className="upload-back" aria-label={`返回${isBlog ? '博客' : '笔记'}`}><Icon name="back" /><span>返回{isBlog ? '博客' : '笔记'}</span></Link><AuthMenu /></div>
+      {brand}<div className="upload-header__actions">{managementHref && isAdmin && <Link to={managementHref} className="upload-back">管理博文</Link>}{managementHref && <span className="upload-back upload-current" aria-current="page">上传{noun}</span>}<Link to="/" className="upload-back" aria-label={`返回${isBlog ? '博客' : '笔记'}`}><Icon name="back" /><span>返回{isBlog ? '博客' : '笔记'}</span></Link><AuthMenu /></div>
     </div></header>
     <main className="upload-shell upload-main">
       <div className="upload-intro">
@@ -109,7 +113,7 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
                       <div className="upload-step__title"><span>02</span><h2>选择{noun}文件夹</h2><small>正文与配图，一起上传</small></div>
                       <label className={`upload-picker${files.length ? ' upload-picker--selected' : ''}`}>
                         <input ref={fileInput} type="file" multiple {...({ webkitdirectory: '', directory: '' } as Record<string, string>)} aria-label={`选择${noun}文件夹`} aria-describedby={validationId}
-                          onChange={(event) => { setFiles(Array.from(event.target.files || [])); setError(''); }} />
+                          onChange={(event) => { setFiles(Array.from(event.target.files || [])); setError(''); setDuplicate(false); }} />
                         <span className="upload-picker__icon"><Icon name="folder" /></span>
                         <span className="upload-picker__copy"><strong>{files.length ? slug : '选择一个文件夹'}</strong><span>{files.length ? `${files.length} 个文件 · ${formatBytes(bytes)}` : '包含 index.md 和同级图片'}</span></span>
                         <span className="upload-picker__action">{files.length ? '重新选择' : '浏览文件夹'}<Icon name="arrow" /></span>
@@ -123,13 +127,14 @@ export default function UploadWorkspace({ target, brand, categories }: { target:
                     </section>
                   </fieldset>
                   {error && <p className="upload-error upload-error--request" role="alert">{error}</p>}
+                  {duplicate && onExisting && <button type="button" className="upload-button" onClick={() => onExisting(files, category.trim())}>更新已有文章<Icon name="arrow" /></button>}
                   <p className="upload-publish-note">上传完成后自动发布；标记为草稿的内容暂不公开。</p>
                 </form>}
               </div>
               <aside className="upload-guide" aria-label="文件准备说明">
                 <p className="upload-kicker">BEFORE YOU UPLOAD</p><h2>准备好一个文件夹</h2><p>一篇正文，几张配图。<br />让内容保持简单而完整。</p>
                 <div className="upload-tree" aria-label="文件夹结构示例"><div><Icon name="folder" /><span>{isBlog ? 'my-first-post' : 'my-study-note'}/</span></div><div><Icon name="file" /><span>index.md</span><small>正文</small></div><div><Icon name="image" /><span>cover.jpg</span><small>可选配图</small></div></div>
-                <ul><li>文件夹名使用小写字母、数字和连字符。</li><li>正文和图片放在同一层，图片用 <code>./cover.jpg</code> 引用。</li><li>如果正文已填写分类，请与左侧保持一致。</li><li>同名内容不会被覆盖，请使用新的文件夹名。</li></ul>
+                <ul><li>文件夹名使用小写字母、数字和连字符。</li><li>正文和图片放在同一层，图片用 <code>./cover.jpg</code> 引用。</li><li>如果正文已填写分类，请与左侧保持一致。</li><li>{onExisting ? '同名博文可选择更新，确认差异后再发布。' : '同名内容不会被覆盖，请使用新的文件夹名。'}</li></ul>
                 <p className="upload-guide__formats">支持 PNG · JPG · GIF · WebP · AVIF</p>
               </aside>
             </div>}

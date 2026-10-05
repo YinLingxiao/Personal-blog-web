@@ -137,7 +137,7 @@ export default function NoteLayout() {
                   else { const destination = selectedId || location.state?.noteId || notes[0]?.id; if (destination) navigate(`/post/${encodeURIComponent(destination)}`); }
                 }}
                 aria-pressed={viewMode === m}
-                className={`font-serif-cn px-3 py-1.5 text-xs rounded-md transition-colors ${
+                className={`font-serif-cn px-3 py-1.5 text-xs transition-colors ${
                   viewMode === m ? 'text-[#e0e0e0] bg-white/[0.06]' : 'text-[color:var(--faint)] hover:text-[#999]'
                 }`}
               >
@@ -214,7 +214,7 @@ export default function NoteLayout() {
       {showBgMenu && (
         <>
           <div className="fixed inset-0 z-50" onClick={() => setShowBgMenu(false)} />
-          <div id="note-appearance" role="dialog" aria-modal="true" aria-label="背景与动效" className="fixed right-4 top-14 z-[60] bg-[#111] border border-white/[0.06] rounded-lg py-1 min-w-[120px] shadow-2xl">
+          <div id="note-appearance" role="dialog" aria-modal="true" aria-label="背景与动效" className="fixed right-4 top-14 z-[60] bg-[#111] border border-white/[0.06] py-1 min-w-[120px] shadow-2xl">
             <div className="note-motion-control"><MotionControls /></div>
             {backgroundConfig.options.map((opt) => (
               <button
@@ -224,7 +224,7 @@ export default function NoteLayout() {
                   bg === opt.id ? 'text-[#e0e0e0]' : 'text-[#666] hover:text-[#bbb]'
                 }`}
               >
-                {bg === opt.id && <span className="mr-1.5 text-accent">&#183;</span>}
+                {bg === opt.id && <span className="mr-1.5">&#183;</span>}
                 {opt.label}
               </button>
             ))}

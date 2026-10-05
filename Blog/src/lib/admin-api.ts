@@ -13,6 +13,7 @@ export interface UploadResult {
   publishedSlug?: string;
   publishFailed?: boolean;
   message: string;
+  revision?: string;
 }
 
 export class AdminApiError extends Error {
@@ -66,4 +67,69 @@ export async function publishSaved(target: UploadTarget, slug: string) {
     headers: { 'Content-Type': 'application/json', 'X-CSRF-Token': csrf.token },
     body: JSON.stringify({ slug }),
   }));
+}
+
+export interface BlogSource {
+  slug: string;
+  category: string;
+  title: string;
+  draft: boolean;
+  revision: string;
+  markdown: string;
+  metadata: Record<string, unknown>;
+  files: Array<{ name: string; size: number; hash: string }>;
+}
+
+export interface ManagedPost {
+  slug: string;
+  category: string;
+  title: string;
+  draft: boolean;
+  revision: string;
+  published: boolean;
+  hasBackup: boolean;
+  publishFailed: boolean;
+}
+
+const blogAdminURL = `${authBaseURL}/api/admin/content/blog`;
+
+export async function listManagedPosts(signal?: AbortSignal) {
+  return readResponse<ManagedPost[]>(await fetch(blogAdminURL, { credentials: 'include', cache: 'no-store', signal }));
+}
+
+export async function readBlogSource(slug: string, signal?: AbortSignal) {
+  return readResponse<BlogSource>(await fetch(`${blogAdminURL}/${encodeURIComponent(slug)}`, { credentials: 'include', cache: 'no-store', signal }));
+}
+
+export async function readBlogImage(slug: string, filename: string, signal?: AbortSignal) {
+  const response = await fetch(`${blogAdminURL}/${encodeURIComponent(slug)}/images/${encodeURIComponent(filename)}`, { credentials: 'include', cache: 'no-store', signal });
+  if (!response.ok) await readResponse(response);
+  return new File([await response.blob()], filename);
+}
+
+export async function updateBlog(source: BlogSource, category: string, files: File[]) {
+  const csrf = await readResponse<{ token: string }>(await fetch(`${authBaseURL}/api/admin/csrf?action=update`, { credentials: 'include' }));
+  const form = new FormData();
+  form.set('category', category);
+  form.set('revision', source.revision);
+  form.set('manifest', JSON.stringify({ slug: source.slug, files: files.map((file, index) => {
+    const partId = `file_${index}`;
+    form.append(partId, file, file.name);
+    return { partId, relativePath: `${source.slug}/${file.name}` };
+  }) }));
+  return readResponse<UploadResult>(await fetch(`${blogAdminURL}/${encodeURIComponent(source.slug)}`, {
+    method: 'PUT', credentials: 'include', headers: { 'X-CSRF-Token': csrf.token }, body: form,
+  }));
+}
+
+export async function downloadBlog(slug: string, previous = false) {
+  const url = `${blogAdminURL}/${encodeURIComponent(slug)}/download${previous ? '?version=previous' : ''}`;
+  const response = await fetch(url, { method: 'HEAD', credentials: 'include' });
+  if (!response.ok) await readResponse(response);
+  const anchor = document.createElement('a');
+  anchor.href = url;
+  anchor.download = `${slug}${previous ? '-previous' : ''}.zip`;
+  document.body.append(anchor);
+  anchor.click();
+  anchor.remove();
 }

@@ -3,7 +3,7 @@ import { Router, type NextFunction, type Request, type Response } from "express"
 import type { RuntimeConfig } from "../config.js";
 import { ContentStore, type ContentTarget, type UploadManifest } from "../content/content-store.js";
 import { ContentPublisher } from "../content/content-publisher.js";
-import { ContentValidationError } from "../content/policy.js";
+import { ContentValidationError, validateSegment } from "../content/policy.js";
 import type { AdminRequest } from "../middleware/require-super-admin.js";
 import { createCsrfToken, verifyCsrfToken } from "../security/csrf.js";
 
@@ -40,6 +40,7 @@ export function createAdminContentRouter(
   const router = Router();
   const activeUploads = new Set<string>();
   router.use(requireSuperAdmin);
+  router.use((_req, res, next) => { res.setHeader("Cache-Control", "private, no-store"); next(); });
 
   router.get("/csrf", (req: AdminRequest, res) => {
     const origin = originFor(req, config);
@@ -49,12 +50,13 @@ export function createAdminContentRouter(
     }
     res.setHeader("Cache-Control", "no-store");
     res.json({
-      token: createCsrfToken(config, { userId: req.admin!.id, origin, action: req.query.action === "publish" ? "content-publish" : "content-upload" }),
+      token: createCsrfToken(config, { userId: req.admin!.id, origin, action: req.query.action === "publish" ? "content-publish" : req.query.action === "update" ? "content-update" : "content-upload" }),
       expiresIn: config.upload.csrfTtlSeconds,
     });
   });
 
-  router.post("/content/:target", rateLimit, async (req: AdminRequest, res, next) => {
+  const saveContent = async (req: AdminRequest, res: Response, next: NextFunction) => {
+    const updating = req.method === "PUT";
     const target = req.params.target as ContentTarget;
     if (target !== "blog" && target !== "note") {
       res.status(404).json({ code: "UNKNOWN_TARGET", message: "未知内容目标" });
@@ -62,7 +64,7 @@ export function createAdminContentRouter(
     }
     const origin = originFor(req, config);
     const token = req.get("x-csrf-token") || "";
-    if (!origin || !verifyCsrfToken(config, token, { userId: req.admin!.id, origin, action: "content-upload" })) {
+    if (!origin || !verifyCsrfToken(config, token, { userId: req.admin!.id, origin, action: updating ? "content-update" : "content-upload" })) {
       res.status(403).json({ code: "INVALID_CSRF", message: "请求校验失败，请刷新后重试" });
       return;
     }
@@ -117,14 +119,18 @@ export function createAdminContentRouter(
       const category = form.get("category");
       if (typeof category !== "string") throw new ContentValidationError("缺少分类");
       const manifest = parseManifest(form.get("manifest"));
-      const expectedFields = new Set(["category", "manifest", ...manifest.files.map(({ partId }) => partId)]);
+      const revision = updating ? form.get("revision") : undefined;
+      if (updating && (target !== "blog" || manifest.slug !== req.params.slug || typeof revision !== "string" || !/^[a-f0-9]{64}$/.test(revision))) {
+        throw new ContentValidationError("更新目标或版本无效");
+      }
+      const expectedFields = new Set(["category", "manifest", ...(updating ? ["revision"] : []), ...manifest.files.map(({ partId }) => partId)]);
       for (const key of form.keys()) {
         if (!expectedFields.has(key)) throw new ContentValidationError(`上传包含清单之外的字段：${key}`);
       }
       for (const field of expectedFields) {
         if (form.getAll(field).length !== 1) throw new ContentValidationError(`上传字段必须且只能出现一次：${field}`);
       }
-      if ([...form.keys()].length > config.upload.maxFiles + 2) {
+      if ([...form.keys()].length > config.upload.maxFiles + (updating ? 3 : 2)) {
         throw new ContentValidationError("上传字段数量超过限制", 413, "UPLOAD_TOO_LARGE");
       }
       const parts = manifest.files.map(({ partId }) => {
@@ -132,37 +138,42 @@ export function createAdminContentRouter(
         if (!(file instanceof File)) throw new ContentValidationError(`缺少文件 part：${partId}`);
         return { partId, file };
       });
-      const result = await store.store({
-        target,
-        category,
-        manifest,
-        parts,
-        userId: req.admin!.id,
-        requestId: req.get("x-request-id") || crypto.randomUUID(),
+      await publisher.exclusive(target, async () => {
+        const result = await store.store({
+          target,
+          category,
+          manifest,
+          parts,
+          ...(updating ? { revision: revision as string } : {}),
+          userId: req.admin!.id,
+          requestId: req.get("x-request-id") || crypto.randomUUID(),
+        });
+        try {
+          const items = await publisher.publish(target);
+          const publishedItem = items.find((item) => target === "note"
+            ? item.sourceSlug === result.slug && item.category === result.category
+            : item.id === result.slug);
+          const published = Boolean(publishedItem);
+          if (result.auditId) store.recordPublication(result.auditId, published);
+          res.status(updating ? 200 : 201).json({
+            ...result,
+            stored: true,
+            published,
+            publishedSlug: publishedItem?.id,
+            message: published ? "已保存并发布，访客现在可以看到。" : "草稿已保存，暂不公开。",
+          });
+        } catch (error) {
+          if (result.auditId) store.recordPublishFailure(result.auditId);
+          console.error("[site-api] publication failed after upload", error);
+          res.status(202).json({
+            ...result,
+            stored: true,
+            published: false,
+            publishFailed: true,
+            message: updating ? "修改已保存，发布失败，线上仍为旧版。请重试发布。" : "源文件已保存，但发布失败。请点击重试发布，无需重新上传。",
+          });
+        }
       });
-      try {
-        const items = await publisher.publish(target);
-        const publishedItem = items.find((item) => target === "note"
-          ? item.sourceSlug === result.slug && item.category === result.category
-          : item.id === result.slug);
-        const published = Boolean(publishedItem);
-        res.status(201).json({
-          ...result,
-          stored: true,
-          published,
-          publishedSlug: publishedItem?.id,
-          message: published ? "已保存并发布，访客现在可以看到。" : "草稿已保存，暂不公开。",
-        });
-      } catch (error) {
-        console.error("[site-api] publication failed after upload", error);
-        res.status(202).json({
-          ...result,
-          stored: true,
-          published: false,
-          publishFailed: true,
-          message: "源文件已保存，但发布失败。请点击重试发布，无需重新上传。",
-        });
-      }
     } catch (error) {
       if (error instanceof ContentValidationError) {
         res.status(error.status).json({ code: error.code, message: error.message });
@@ -172,7 +183,9 @@ export function createAdminContentRouter(
     } finally {
       activeUploads.delete(userId);
     }
-  });
+  };
+  router.post("/content/:target", rateLimit, saveContent);
+  router.put("/content/:target/:slug", rateLimit, saveContent);
 
   router.post("/content/:target/publish", rateLimit, async (req: AdminRequest, res) => {
     const target = req.params.target as ContentTarget;
@@ -187,18 +200,71 @@ export function createAdminContentRouter(
       return;
     }
     const slug = req.body?.slug;
-    if (typeof slug !== "string" || !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug)) {
+    if (typeof slug !== "string" || (target === "note" && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(slug))) {
       res.status(400).json({ code: "INVALID_CONTENT", message: "内容名称无效" });
       return;
     }
     try {
-      const items = await publisher.publish(target);
-      const publishedItem = items.find((item) => target === "note" ? item.sourceSlug === slug : item.id === slug);
-      const published = Boolean(publishedItem);
-      res.json({ published, publishedSlug: publishedItem?.id, message: published ? "发布成功，访客现在可以看到。" : "草稿暂不公开。" });
+      await publisher.exclusive(target, async () => {
+        if (target === "blog") { validateSegment(slug, "category"); store.readBlog(slug); }
+        const items = await publisher.publish(target);
+        const publishedItem = items.find((item) => target === "note" ? item.sourceSlug === slug : item.id === slug);
+        const published = Boolean(publishedItem);
+        if (target === "blog") store.recordPublishRetry(slug, published);
+        res.json({ published, publishedSlug: publishedItem?.id, message: published ? "发布成功，访客现在可以看到。" : "草稿暂不公开。" });
+      });
     } catch (error) {
+      if (error instanceof ContentValidationError) { res.status(error.status).json({ code: error.code, message: error.message }); return; }
       console.error("[site-api] publication retry failed", error);
       res.status(503).json({ code: "PUBLICATION_FAILED", message: "发布仍未完成，请稍后重试。源文件已保存。" });
+    }
+  });
+
+  router.get("/content/blog", async (_req, res, next) => {
+    try {
+      await publisher.exclusive("blog", async () => {
+        const items = await publisher.publishedItems("blog");
+        const published = new Set(items.map((item) => item.id));
+        res.json(store.listBlog().map((item) => ({ ...item, published: published.has(item.slug) })));
+      });
+    } catch (error) { next(error); }
+  });
+
+  router.get("/content/blog/:slug", async (req, res, next) => {
+    try { await publisher.exclusive("blog", async () => { res.json(store.readBlog(String(req.params.slug))); }); }
+    catch (error) {
+      if (error instanceof ContentValidationError) res.status(error.status).json({ code: error.code, message: error.message });
+      else next(error);
+    }
+  });
+
+  router.get("/content/blog/:slug/download", async (req, res, next) => {
+    try {
+      await publisher.exclusive("blog", async () => {
+        const slug = String(req.params.slug);
+        const backup = req.query.version === "previous";
+        const zip = store.blogZip(slug, backup);
+        res.setHeader("Content-Type", "application/zip");
+        const filename = `${slug}${backup ? "-previous" : ""}.zip`;
+        res.setHeader("Content-Disposition", `attachment; filename="${filename.replace(/[^A-Za-z0-9_.-]/g, "_")}"; filename*=UTF-8''${encodeURIComponent(filename)}`);
+        res.send(zip);
+      });
+    } catch (error) {
+      if (error instanceof ContentValidationError) res.status(error.status).json({ code: error.code, message: error.message });
+      else next(error);
+    }
+  });
+
+  router.get("/content/blog/:slug/images/:filename", async (req, res, next) => {
+    try {
+      await publisher.exclusive("blog", async () => {
+        const filename = String(req.params.filename);
+        const buffer = store.blogImage(String(req.params.slug), filename);
+        res.type(filename).send(buffer);
+      });
+    } catch (error) {
+      if (error instanceof ContentValidationError) res.status(error.status).json({ code: error.code, message: error.message });
+      else next(error);
     }
   });
 

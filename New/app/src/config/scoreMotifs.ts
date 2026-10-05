@@ -1,6 +1,6 @@
 import type { CSSProperties } from 'react';
 
-export type ScorePiece = 'ballade' | 'opus' | 'sonata' | 'concerto' | 'etude' | 'fantaisie';
+export type ScorePiece = 'ballade' | 'opus' | 'sonata' | 'etude' | 'fantaisie';
 export type ScoreVariant = 'section' | 'card' | 'wide';
 
 type ScoreCorner = 'top-right' | 'bottom-left';
@@ -78,18 +78,6 @@ export const scoreMotifs: Record<ScorePiece, ScoreMotif> = {
       fragment('sonata', 'b', 'bottom-left', '4.131',
         { bottom: '-9%', left: '-10%', width: '56%' },
         { bottom: '-6%', left: '-16%', width: '96%' }),
-    ],
-  },
-  concerto: {
-    label: 'P. I. TCHAIKOVSKY · PIANO CONCERTO NO.1 · OP.23',
-    opacity: 0.15,
-    fragments: [
-      fragment('concerto', 'a', 'top-right', '2.847',
-        { top: '-7%', right: '-10%', width: '58%' },
-        { top: '-4%', right: '-16%', width: '98%' }),
-      fragment('concerto', 'b', 'bottom-left', '2.568',
-        { bottom: '-9%', left: '-10%', width: '58%' },
-        { bottom: '-6%', left: '-16%', width: '98%' }),
     ],
   },
   etude: {

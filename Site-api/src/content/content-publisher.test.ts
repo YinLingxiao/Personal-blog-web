@@ -14,6 +14,23 @@ afterEach(async () => {
   await Promise.all(roots.splice(0).map((root) => fs.rm(root, { recursive: true, force: true })));
 });
 
+it("serializes each site's writes through publication and releases the queue after failure", async () => {
+  const config = loadConfig({ NODE_ENV: "test" });
+  const publisher = new ContentPublisher(config);
+  const events: string[] = [];
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => { release = resolve; });
+  const first = publisher.exclusive("blog", async () => { events.push("first write"); await gate; events.push("first publish"); throw new Error("failed publish"); });
+  const firstOutcome = first.catch((error: Error) => error.message);
+  const second = publisher.exclusive("blog", async () => { events.push("second write"); events.push("second publish"); });
+  await publisher.exclusive("note", async () => { events.push("note publish"); });
+  expect(events).toEqual(["first write", "note publish"]);
+  release();
+  expect(await firstOutcome).toBe("failed publish");
+  await second;
+  expect(events).toEqual(["first write", "note publish", "first publish", "second write", "second publish"]);
+});
+
 it("publishes uploaded content dynamically and retains the last good snapshot on failure", async () => {
   const root = await fs.mkdtemp(path.join(os.tmpdir(), "moqian-publish-test-"));
   roots.push(root);
@@ -38,7 +55,7 @@ it("publishes uploaded content dynamically and retains the last good snapshot on
   expect((await publisher.publish("blog")).map((item) => item.id)).toEqual(["first-post"]);
   const firstDirectory = await publisher.directory("blog");
   const firstIndex = JSON.parse(await fs.readFile(path.join(firstDirectory, "index.json"), "utf8"));
-  expect(firstIndex[0].cover).toBe("http://localhost:8787/api/content/blog/posts/first-post/cover.png");
+  expect(firstIndex[0].cover).toMatch(/^http:\/\/localhost:8787\/api\/content\/blog\/posts\/first-post\/cover\.png\?v=[a-f0-9]{16}$/);
   expect(firstIndex[0].content).toContain("http://localhost:8787/api/content/blog/posts/first-post/cover.png");
   expect(await fs.readFile(path.join(firstDirectory, "posts", "first-post", "cover.png"), "utf8")).toBe("image bytes");
   expect(JSON.parse(await fs.readFile(path.join(firstDirectory, "latest.json"), "utf8"))).toHaveLength(1);
