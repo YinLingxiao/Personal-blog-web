@@ -721,9 +721,11 @@
 
 .editor-fullscreen[open] { display: flex; flex-direction: column; animation: ws-dialog-in var(--motion-control) var(--motion-ease); }
 .editor-fullscreen::backdrop { background: var(--ground); }
-.editor-fullscreen, .editor-fullscreen * { cursor: auto !important; }
-.editor-fullscreen :is(button, a, select) { cursor: pointer !important; }
-.editor-fullscreen textarea { cursor: text !important; }
+html.custom-cursor-on :is(.editor-fullscreen, .ws-dialog),
+html.custom-cursor-on :is(.editor-fullscreen, .ws-dialog) * { cursor: auto !important; }
+html.custom-cursor-on :is(.editor-fullscreen, .ws-dialog) :is(button, a, select, label, [role="button"]) { cursor: pointer !important; }
+html.custom-cursor-on :is(.editor-fullscreen, .ws-dialog) :is(textarea, input:not([type="button"], [type="submit"], [type="checkbox"], [type="radio"], [type="file"]), [contenteditable]:not([contenteditable="false"])) { cursor: text !important; }
+html.custom-cursor-on :is(.editor-fullscreen, .ws-dialog) :disabled { cursor: not-allowed !important; }
 
 .editor-fullscreen__header {
   display: flex;
@@ -744,7 +746,6 @@
 .editor-fullscreen .editor-writing .editor-pane { display: flex; min-height: 0; }
 .editor-fullscreen .editor-pane--preview { contain: none; }
 .editor-fullscreen .editor-code-host { flex: 1; height: 100%; min-height: 0; }
-.editor-fullscreen .cm-content { cursor: text !important; }
 .editor-fullscreen .editor-preview { min-height: 0; overscroll-behavior: contain; }
 .editor-fullscreen .editor-pane--preview .editor-preview { height: auto; flex: 1; }
 .editor-fullscreen .editor-switch { display: none; }

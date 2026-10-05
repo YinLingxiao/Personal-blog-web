@@ -21,6 +21,7 @@ export default function MarkdownWorkspace({ markdown, onChange, preview, dirty, 
   const fullscreenPreview = useRef<HTMLDivElement>(null);
   const editor = useRef<LinkedMarkdownEditor | null>(null);
   const initialText = useRef(markdown);
+  const unacknowledged = useRef<string[]>([]);
   const onChangeRef = useRef(onChange);
   const composing = useRef(false);
   const previewUpdates = useMemo(() => new PreviewUpdates(setPreviewMarkdown), []);
@@ -32,7 +33,7 @@ export default function MarkdownWorkspace({ markdown, onChange, preview, dirty, 
 
   useLayoutEffect(() => {
     const instance = new LinkedMarkdownEditor(inlineHost.current!, initialText.current, {
-      onChange: (text, isComposing) => { onChangeRef.current(text); schedulePreview(text, isComposing); },
+      onChange: (text, isComposing) => { unacknowledged.current = [...unacknowledged.current.slice(-49), text]; onChangeRef.current(text); schedulePreview(text, isComposing); },
       onCompositionEnd: (text) => schedulePreview(text, false),
       onJump: () => setView('edit'),
     });
@@ -51,8 +52,11 @@ export default function MarkdownWorkspace({ markdown, onChange, preview, dirty, 
   }, [expanded]);
 
   useEffect(() => {
+    const index = unacknowledged.current.lastIndexOf(markdown);
+    if (index >= 0) { unacknowledged.current = unacknowledged.current.slice(index + 1); return; }
+    unacknowledged.current = [];
     editor.current?.setText(markdown);
-    schedulePreview(markdown, composing.current);
+    schedulePreview(markdown, false);
   }, [markdown, schedulePreview]);
 
   useEffect(() => { editor.current?.setDisabled(disabled); }, [disabled]);
