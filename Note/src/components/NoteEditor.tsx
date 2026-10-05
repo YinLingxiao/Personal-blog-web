@@ -36,7 +36,7 @@ export default function NoteEditor({ note, allNotes, onNavigate }: Props) {
         <span className="text-[10px] tracking-widest text-[color:var(--faint)] uppercase font-serif">{editorConfig.previewLabel}</span>
         <div className="flex-1" />
         {note.source && (
-          <a href={note.source} target="_blank" rel="noopener noreferrer" className="text-xs text-accent/60 hover:text-accent truncate max-w-40">
+          <a href={note.source} target="_blank" rel="noopener noreferrer" className="text-xs truncate max-w-40">
             {editorConfig.sourceLabel}
           </a>
         )}

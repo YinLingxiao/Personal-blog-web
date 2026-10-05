@@ -66,7 +66,7 @@ export default function Sidebar({ notes, selectedId, search, onSearch, onSelect,
             value={search}
             onChange={(e) => onSearch(e.target.value)}
             placeholder={sidebarConfig.searchPlaceholder}
-            className="w-full px-3 py-2 text-sm bg-white/[0.03] rounded-lg text-[#e0e0e0] placeholder:text-[#444] focus:outline-none focus:bg-white/[0.05] transition-colors"
+            className="w-full px-3 py-2 text-sm bg-white/[0.03] text-[#e0e0e0] placeholder:text-[#444] focus:outline-none focus:bg-white/[0.05] transition-colors"
           />
         </div>
 
@@ -79,7 +79,7 @@ export default function Sidebar({ notes, selectedId, search, onSearch, onSelect,
               key={note.id}
               aria-current={note.id === selectedId ? 'page' : undefined}
               onClick={() => onSelect(note.id)}
-              className={`w-full text-left px-3 py-2.5 rounded-lg mb-0.5 transition-all ${
+              className={`w-full text-left px-3 py-2.5 mb-0.5 transition-all ${
                 note.id === selectedId
                   ? 'bg-white/[0.06] text-[#e0e0e0]'
                   : 'text-[#888] hover:bg-white/[0.03] hover:text-[#bbb]'

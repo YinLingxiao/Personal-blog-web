@@ -119,3 +119,64 @@
   .upload-footer { margin-top: 40px; flex-direction: column; gap: 8px; }
 }
 @media (prefers-reduced-motion: reduce) { .upload-workspace * { transition: none; } }
+.upload-workspace--blog { background: var(--ground); color: var(--ink); font-family: var(--font-ui); }
+.upload-workspace--blog .upload-shell { width: min(var(--shell, 1200px), calc(100% - 80px)); }
+.upload-workspace--blog .upload-header { border-bottom-color: var(--line); }
+.upload-workspace--blog .upload-header__inner { min-height: 72px; }
+.upload-workspace--blog .upload-header__actions { gap: 24px; }
+.upload-workspace--blog .upload-back { position: relative; color: var(--meta); font-size: 14px; letter-spacing: .02em; transition: color var(--motion-control) ease; }
+.upload-workspace--blog .upload-back:hover, .upload-workspace--blog .upload-back[aria-current="page"] { color: var(--ink); }
+.upload-workspace--blog .upload-back[aria-current="page"]::after { content: ''; position: absolute; left: 0; right: 0; bottom: 6px; height: 1px; background: var(--ink); }
+.upload-workspace--blog .upload-main { padding-top: 64px; }
+.upload-workspace--blog .upload-kicker { color: var(--meta); font-size: 11px; letter-spacing: .16em; }
+.upload-workspace--blog .upload-intro h1, .upload-workspace--blog .upload-guide h2, .upload-workspace--blog :is(.upload-state, .upload-success) h2 { font-family: var(--font-serif); }
+.upload-workspace--blog .upload-intro h1 { margin-bottom: 12px; font-size: clamp(2rem, 3.5vw, 2.875rem); }
+.upload-workspace--blog .upload-intro__description { color: var(--body); font-size: 15px; }
+.upload-workspace--blog .upload-tabs { border-bottom-color: var(--line-strong); }
+.upload-workspace--blog .upload-tabs a { min-height: 44px; color: var(--body); transition: color var(--motion-control) ease; }
+.upload-workspace--blog .upload-tabs a:hover, .upload-workspace--blog .upload-tabs a[aria-current="page"] { color: var(--ink); }
+.upload-workspace--blog .upload-tabs a > span { color: var(--meta); font-size: 11px; }
+.upload-workspace--blog .upload-step + .upload-step, .upload-workspace--blog .upload-guide, .upload-workspace--blog .upload-footer, .upload-workspace--blog .upload-files li { border-color: var(--line); }
+.upload-workspace--blog .upload-step__title > span { color: var(--meta); font-size: 12px; }
+.upload-workspace--blog .upload-step__title :is(h2, label) { font-family: var(--font-serif); font-size: 18px; font-weight: 600; letter-spacing: .02em; }
+.upload-workspace--blog .upload-step__title small { color: var(--meta); font-size: 13px; }
+.upload-workspace--blog .upload-category { border-color: var(--field-line); border-radius: var(--radius); background: var(--field); color: var(--ink); font-size: 16px; transition: border-color var(--motion-control) ease; }
+.upload-workspace--blog .upload-category:hover { border-color: var(--line-hover); }
+.upload-workspace--blog .upload-category:focus-visible { border-color: var(--ink); }
+.upload-workspace--blog .upload-category::placeholder { color: #77736c; }
+.upload-workspace--blog :is(.upload-hint, .upload-publish-note) { color: var(--meta); font-size: 13px; }
+.upload-workspace--blog .upload-error { font-size: 14px; }
+.upload-workspace--blog .upload-error--request { border-color: var(--danger-line); border-radius: var(--radius); background: var(--danger-bg); color: var(--danger); }
+.upload-workspace--blog .upload-picker { border-color: #625e56; border-radius: var(--radius); background: #0d0d0c; transition: background-color var(--motion-control) ease, border-color var(--motion-control) ease; }
+.upload-workspace--blog .upload-picker:hover { background: #151514; border-color: var(--line-hover); }
+.upload-workspace--blog .upload-picker__copy strong { font-size: 16px; }
+.upload-workspace--blog .upload-picker__copy > span, .upload-workspace--blog .upload-picker__action { font-size: 13px; }
+.upload-workspace--blog .upload-files__heading { color: var(--meta); font-size: 12px; }
+.upload-workspace--blog .upload-files__heading button { font-size: 14px; color: var(--body); transition: color var(--motion-control) ease; }
+.upload-workspace--blog .upload-files__heading button:hover { color: var(--ink); }
+.upload-workspace--blog .upload-files li { font-size: 14px; }
+.upload-workspace--blog .upload-files li small { color: var(--meta); font-size: 12px; }
+.upload-workspace--blog .upload-submit { border-top-color: var(--line-strong); }
+.upload-workspace--blog .upload-submit p { color: var(--body); font-size: 14px; }
+.upload-workspace--blog .upload-button { min-height: 44px; border-radius: var(--radius); font-size: 14px; font-weight: 500; letter-spacing: .02em; transition: background-color var(--motion-control) ease, border-color var(--motion-control) ease; }
+.upload-workspace--blog .upload-button:hover:not(:disabled) { border-color: #fffdf7; }
+.upload-workspace--blog .upload-guide > p:not(.upload-kicker) { color: var(--body); font-size: 14px; }
+.upload-workspace--blog .upload-tree { border-color: var(--line-strong); border-radius: var(--radius); background: var(--field); }
+.upload-workspace--blog .upload-tree > div { font-size: 12px; }
+.upload-workspace--blog .upload-tree code, .upload-workspace--blog .upload-guide code { font-family: var(--font-code); font-size: 12px; }
+.upload-workspace--blog .upload-guide ul { color: var(--body); font-size: 13px; }
+.upload-workspace--blog .upload-guide > .upload-guide__formats { color: var(--meta); font-size: 12px; }
+.upload-workspace--blog .upload-state > p:not(.upload-kicker), .upload-workspace--blog .upload-success > p:not(.upload-kicker) { color: var(--body); }
+.upload-workspace--blog .upload-success dl { border-color: var(--line-strong); }
+.upload-workspace--blog .upload-success dl > div { font-size: 14px; }
+.upload-workspace--blog .upload-success dt { color: var(--meta); }
+.upload-workspace--blog .upload-success__actions { flex-wrap: wrap; gap: 12px 24px; }
+.upload-workspace--blog .upload-footer { color: var(--meta); font-size: 12px; }
+.upload-workspace--blog :is(a, button, input):focus-visible, .upload-workspace--blog .upload-picker:focus-within { outline: 1px solid var(--fg); outline-offset: 4px; }
+@media (max-width: 700px) {
+  .upload-workspace--blog .upload-shell { width: calc(100% - 40px); }
+  .upload-workspace--blog .upload-header__actions { gap: 14px; }
+  .upload-workspace--blog .upload-current { display: none; }
+  .upload-workspace--blog .upload-main { padding-top: 32px; }
+  .upload-workspace--blog .upload-intro__description { font-size: 14px; }
+}

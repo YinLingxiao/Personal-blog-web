@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useCallback } from 'react';
 import { Link, useParams, useNavigate } from 'react-router';
 import { siteConfig } from '@/config';
-import BlogBrandHome from '@/components/BlogBrandHome';
-import AuthMenu from '@/components/AuthMenu';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 import PostReader from '@/components/PostReader';
 import { usePosts } from '@/hooks/usePosts';
 import { resolveLink } from '@/utils/linkParser';
+import { authClient } from '@/lib/auth-client';
 
 function formatDate(ts: number) {
   const d = new Date(ts);
@@ -18,6 +19,7 @@ function formatDate(ts: number) {
 export default function ArticleLayout() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { data: session } = authClient.useSession();
   const { posts, isLoading, error } = usePosts();
 
   useEffect(() => {
@@ -44,127 +46,80 @@ export default function ArticleLayout() {
   );
 
   return (
-    <div className="min-h-screen text-[#e5e5e5]">
-      <header className="border-b border-[color:var(--hairline)]">
-        <div className="max-w-[1200px] mx-auto px-6 md:px-8 h-16 flex items-center justify-between">
-          <BlogBrandHome />
-          <div className="flex items-center gap-5">
-            <Link
-              to="/"
-              className="group flex items-center gap-2 text-[0.75rem] tracking-[0.05em] text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors"
-              style={{ fontFamily: 'var(--font-sans)' }}
-            >
-              博客首页
-              <span className="inline-block transition-transform duration-300 group-hover:translate-x-1">→</span>
-            </Link>
-            <AuthMenu />
-          </div>
-        </div>
-      </header>
+    <div className="blog-grid flex min-h-screen flex-col">
+      <SiteHeader>
+        {session?.user.role === 'super_admin' && selectedPost && (
+          <Link to={`/admin/posts/${encodeURIComponent(selectedPost.id)}/edit`}>编辑</Link>
+        )}
+        <Link to="/">博客首页</Link>
+      </SiteHeader>
 
-      <main className="max-w-[720px] mx-auto px-6 md:px-8 py-14 md:py-20">
+      <main className="article flex-1 w-full">
         {selectedPost ? (
           <>
-            <header className="fade-up">
+            <header>
               {selectedPost.cover && (
-                <div className="article-cover mb-8 md:mb-10">
+                <figure className="article__cover">
                   <img src={selectedPost.cover} alt="" decoding="async" />
-                  <span aria-hidden />
-                </div>
+                </figure>
               )}
-              <div
-                className="flex flex-wrap items-center gap-x-3 gap-y-1 text-[0.75rem] tracking-[0.14em] uppercase text-[color:var(--dim)]"
-                style={{ fontFamily: 'var(--font-sans)' }}
-              >
+              <p className="article__meta">
                 <time dateTime={new Date(selectedPost.updatedAt).toISOString()}>
                   {formatDate(selectedPost.updatedAt)}
                 </time>
                 {selectedPost.category && (
                   <>
-                    <span aria-hidden>·</span>
-                    <span>{selectedPost.category}</span>
+                    <span aria-hidden="true">·</span>
+                    <span className="article__cat">{selectedPost.category}</span>
                   </>
                 )}
-                {selectedPost.tags.map((tag) => (
-                  <span key={tag} aria-hidden>
-                    #{tag}
+                {selectedPost.tags.length > 0 && (
+                  <span className="article__tags">
+                    {selectedPost.tags.map((tag) => (
+                      <span key={tag}>#{tag}</span>
+                    ))}
                   </span>
-                ))}
-              </div>
-              <h1 className="font-serif-cn text-[1.75rem] md:text-[2.25rem] font-bold leading-[1.4] tracking-[0.01em] mt-4 text-[#e5e5e5]">
-                {selectedPost.title}
-              </h1>
-              <div className="mt-8 md:mt-10 border-t border-[color:var(--hairline)]" />
+                )}
+              </p>
+              <h1 className="article__title">{selectedPost.title}</h1>
+              <div className="article__rule" />
             </header>
 
-            <PostReader key={selectedPost.id} post={selectedPost} allPosts={sorted} onNavigate={handleNavigate} />
+            <div className="article__body">
+              <PostReader key={selectedPost.id} post={selectedPost} allPosts={sorted} onNavigate={handleNavigate} />
+            </div>
 
-            <nav
-              className="mt-16 md:mt-20 pt-6 border-t border-[color:var(--hairline)] flex items-start justify-between gap-6 text-[0.8125rem] leading-[1.7]"
-              style={{ fontFamily: 'var(--font-sans)' }}
-            >
-              {newerPost ? (
-                <Link to={`/post/${newerPost.id}`} className="group max-w-[45%] text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors">
-                  <span className="block text-[0.625rem] tracking-[0.16em] uppercase text-[color:var(--hairline-hover)] mb-1">
-                    ← 较新一篇
-                  </span>
-                  {newerPost.title}
-                </Link>
-              ) : (
-                <span />
-              )}
-              {olderPost ? (
-                <Link to={`/post/${olderPost.id}`} className="group max-w-[45%] text-right text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors">
-                  <span className="block text-[0.625rem] tracking-[0.16em] uppercase text-[color:var(--hairline-hover)] mb-1">
-                    较旧一篇 →
-                  </span>
-                  {olderPost.title}
-                </Link>
-              ) : (
-                <span />
-              )}
-            </nav>
+            {(newerPost || olderPost) && (
+              <nav className="article-pager" aria-label="相邻文章">
+                {newerPost && (
+                  <Link to={`/post/${newerPost.id}`}>
+                    <span className="article-pager__label">← 较新一篇</span>
+                    {newerPost.title}
+                  </Link>
+                )}
+                {olderPost && (
+                  <Link to={`/post/${olderPost.id}`} className="article-pager__older">
+                    <span className="article-pager__label">较旧一篇 →</span>
+                    {olderPost.title}
+                  </Link>
+                )}
+              </nav>
+            )}
           </>
         ) : isLoading ? (
-          <div className="fade-up text-center py-24 text-[#8c8c8c]">正在打开文章…</div>
+          <div className="page-state"><p className="page-state__text">正在打开文章…</p></div>
         ) : error ? (
-          <div className="fade-up text-center py-24 text-[#8c8c8c]">暂时无法读取文章，请稍后刷新重试。</div>
+          <div className="page-state"><p className="page-state__text">暂时无法读取文章，请稍后刷新重试。</p></div>
         ) : (
-          <div className="fade-up text-center py-24">
-            <span
-              className="block text-[0.625rem] uppercase tracking-[0.22em] mb-3 text-[color:var(--hairline-hover)]"
-              style={{ fontFamily: 'var(--font-sans)' }}
-            >
-              Intermission · 幕间
-            </span>
-            <p className="font-serif-cn text-[0.95rem] text-[#8c8c8c]">这一页不在节目单上。</p>
-            <Link
-              to="/"
-              className="inline-block mt-6 text-[0.75rem] tracking-[0.05em] text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors"
-              style={{ fontFamily: 'var(--font-sans)' }}
-            >
-              返回全部文章 →
-            </Link>
+          <div className="page-state">
+            <p className="page-state__label" lang="en">Intermission · 幕间</p>
+            <p className="page-state__text">这一页不在节目单上。</p>
+            <Link to="/" className="ui-btn">返回全部文章<span aria-hidden="true">→</span></Link>
           </div>
         )}
       </main>
 
-      <footer className="border-t border-[color:var(--hairline)]">
-        <div
-          className="max-w-[1200px] mx-auto px-6 md:px-8 py-6 flex justify-between items-center text-[0.625rem] tracking-[0.08em] text-[color:var(--hairline-hover)]"
-          style={{ fontFamily: 'var(--font-sans)' }}
-        >
-          <span>Moqian · Ballade</span>
-          <a
-            href="https://beian.miit.gov.cn/"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="hover:text-[#8c8c8c] transition-colors"
-          >
-            京ICP备2026027832号
-          </a>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

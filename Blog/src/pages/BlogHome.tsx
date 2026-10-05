@@ -1,10 +1,9 @@
-import { useEffect, useId, useMemo, useState, type CSSProperties } from 'react';
+import { useEffect, useId, useMemo, useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 import { Search, X } from 'lucide-react';
 import { usePosts } from '@/hooks/usePosts';
-import { authBaseURL } from '@/lib/auth-client';
-import BlogBrandHome from '@/components/BlogBrandHome';
-import AuthMenu from '@/components/AuthMenu';
+import SiteHeader from '@/components/SiteHeader';
+import SiteFooter from '@/components/SiteFooter';
 import { siteConfig, headerConfig } from '@/config';
 import type { Post } from '@/types';
 import './ballade.css';
@@ -62,7 +61,7 @@ function FeaturedCard({ post, no }: { post: Post; no: number }) {
     <Link to={`/post/${post.id}`} className="bl-feature">
       <div className="bl-feature__body">
         <p className="bl-kicker">
-          <span>Latest</span>
+          <span lang="en">Latest</span>
           <span className="bl-kicker__rule" aria-hidden="true" />
           <span>最新一篇</span>
         </p>
@@ -105,10 +104,10 @@ function FeaturedCard({ post, no }: { post: Post; no: number }) {
   );
 }
 
-function PostCard({ post, no, order }: { post: Post; no: number; order: number }) {
+function PostCard({ post, no }: { post: Post; no: number }) {
   const summary = excerptOf(post, 140);
   return (
-    <li className="bl-cell" style={{ '--bl-delay': `${Math.min(order, 5) * 45}ms` } as CSSProperties}>
+    <li className="bl-cell">
       <Link to={`/post/${post.id}`} className={post.cover ? 'bl-card bl-card--cover' : 'bl-card'}>
         {post.cover && (
           <figure className="bl-card__cover">
@@ -199,22 +198,16 @@ export default function BlogHome() {
 
   return (
     <div className="ballade blog-grid min-h-screen">
-      <header className="bl-topbar">
-        <div className="bl-wrap bl-topbar__inner">
-          <BlogBrandHome />
-          <nav className="bl-nav" aria-label="站点导航">
-            <a href={headerConfig.noteUrl}>笔记</a>
-            <span aria-current="page">博客首页</span>
-            <AuthMenu />
-          </nav>
-        </div>
-      </header>
+      <SiteHeader>
+        <a href={headerConfig.noteUrl}>笔记</a>
+        <span aria-current="page">博客首页</span>
+      </SiteHeader>
 
       <main className="bl-wrap bl-main">
         <section className="bl-masthead" aria-labelledby="bl-title">
           <div className="bl-masthead__lead">
             <p className="bl-kicker">
-              <span>墨浅 · Moqian</span>
+              <span>墨浅 · <span lang="en">Moqian</span></span>
               <span className="bl-kicker__rule" aria-hidden="true" />
               <span lang="en">Essays &amp; Writings</span>
             </p>
@@ -330,7 +323,7 @@ export default function BlogHome() {
             {rest.length > 0 && (
               <ul className="bl-grid" data-count={Math.min(rest.length, 3)}>
                 {rest.map((post, i) => (
-                  <PostCard key={post.id} post={post} no={numbers.get(post.id) ?? i + 1} order={i} />
+                  <PostCard key={post.id} post={post} no={numbers.get(post.id) ?? i + 1} />
                 ))}
               </ul>
             )}
@@ -338,17 +331,7 @@ export default function BlogHome() {
         )}
       </main>
 
-      <footer className="bl-footer">
-        <div className="bl-wrap bl-footer__inner">
-          <span className="bl-footer__group">
-            <span>Moqian · Ballade</span>
-            <a href={`${authBaseURL}/api/content/blog/rss.xml`}>RSS</a>
-          </span>
-          <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer">
-            京ICP备2026027832号
-          </a>
-        </div>
-      </footer>
+      <SiteFooter />
     </div>
   );
 }

@@ -7,14 +7,19 @@ import 'katex/dist/katex.min.css';
 import type { Post } from '../types';
 import { readerConfig } from '../config';
 import { getBacklinks, resolveLink, wikiLinksToMarkdown, extractLinks } from '../utils/linkParser';
+import { normalizeDisplayMath } from '../../../shared/content/display-math.mjs';
+import { editorSourcePositions, type EditorPreviewDocument } from '../lib/editor-preview';
 
 interface Props {
   post: Post;
   allPosts: Post[];
   onNavigate: (title: string) => void;
+  imageUrls?: Map<string, string>;
+  preview?: boolean;
+  sourceDocument?: EditorPreviewDocument;
 }
 
-export default function PostReader({ post, allPosts, onNavigate }: Props) {
+export default function PostReader({ post, allPosts, onNavigate, imageUrls, preview = false, sourceDocument }: Props) {
   const backlinks = useMemo(
     () => getBacklinks(post, allPosts),
     [post, allPosts],
@@ -27,22 +32,25 @@ export default function PostReader({ post, allPosts, onNavigate }: Props) {
     }));
   }, [post.content, allPosts]);
 
-  const mdContent = useMemo(() => wikiLinksToMarkdown(post.content), [post.content]);
+  const mdContent = useMemo(() => sourceDocument?.markdown ?? wikiLinksToMarkdown(preview ? normalizeDisplayMath(post.content) : post.content), [post.content, preview, sourceDocument]);
+  const sourcePlugin = useMemo(() => sourceDocument ? editorSourcePositions(sourceDocument) : null, [sourceDocument]);
 
   return (
-    <article className="fade-up pt-2" style={{ animationDelay: '0.1s' }}>
-      <div className="md-body font-serif-cn">
+    <article>
+      <div className="md-body">
         <ReactMarkdown
           remarkPlugins={[remarkGfm, remarkMath]}
-          rehypePlugins={[rehypeKatex]}
+          rehypePlugins={sourcePlugin ? [sourcePlugin, rehypeKatex] : [rehypeKatex]}
           urlTransform={(url) => url.startsWith('wiki:') ? url : defaultUrlTransform(url)}
           components={{
+            table: ({ children, node, ...props }) => { void node; return <div className="md-table"><table {...props}>{children}</table></div>; },
+            img: ({ src, alt, title }) => <img alt={alt || ''} title={title} loading="lazy" decoding="async" src={src?.startsWith('./') && imageUrls ? imageUrls.get(src.slice(2)) : src} />,
             a: ({ href, children }) => {
               if (href?.startsWith('wiki:')) {
                 return (
-                  <span className="wiki-link" onClick={() => onNavigate(decodeURIComponent(href.slice(5)))}>
+                  <button type="button" className="wiki-link" onClick={() => onNavigate(decodeURIComponent(href.slice(5)))}>
                     {children}
-                  </span>
+                  </button>
                 );
               }
               return <a href={href} target="_blank" rel="noopener noreferrer">{children}</a>;
@@ -53,22 +61,13 @@ export default function PostReader({ post, allPosts, onNavigate }: Props) {
         </ReactMarkdown>
       </div>
 
-      {(outLinks.length > 0 || backlinks.length > 0) && (
-        <div
-          className="mt-12 pt-6 border-t border-[color:var(--hairline)] flex gap-x-8 gap-y-3 flex-wrap text-[0.75rem] leading-[1.8]"
-          style={{ fontFamily: 'var(--font-sans)' }}
-        >
+      {!preview && (outLinks.length > 0 || backlinks.length > 0) && (
+        <div className="article-links">
           {outLinks.length > 0 && (
             <div>
-              <span className="text-[color:var(--hairline-hover)] mr-3 tracking-[0.12em]">{readerConfig.outgoingLinksLabel}</span>
+              <span className="article-links__label">{readerConfig.outgoingLinksLabel}</span>
               {outLinks.map((link) => (
-                <button
-                  key={link.title}
-                  onClick={() => onNavigate(link.title)}
-                  className={`mr-3 transition-colors ${
-                    link.exists ? 'text-[#8c8c8c] hover:text-[#e5e5e5]' : 'text-[color:var(--hairline-hover)] hover:text-[color:var(--faint)]'
-                  }`}
-                >
+                <button key={link.title} type="button" data-missing={link.exists ? undefined : ''} onClick={() => onNavigate(link.title)}>
                   {link.title}
                 </button>
               ))}
@@ -76,13 +75,9 @@ export default function PostReader({ post, allPosts, onNavigate }: Props) {
           )}
           {backlinks.length > 0 && (
             <div>
-              <span className="text-[color:var(--hairline-hover)] mr-3 tracking-[0.12em]">{readerConfig.incomingLinksLabel}</span>
+              <span className="article-links__label">{readerConfig.incomingLinksLabel}</span>
               {backlinks.map((backlink) => (
-                <button
-                  key={backlink.id}
-                  onClick={() => onNavigate(backlink.title)}
-                  className="mr-3 text-[#8c8c8c] hover:text-[#e5e5e5] transition-colors"
-                >
+                <button key={backlink.id} type="button" onClick={() => onNavigate(backlink.title)}>
                   {backlink.title}
                 </button>
               ))}

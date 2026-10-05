@@ -100,3 +100,17 @@ it("serves note bodies and images to any signed-in reader", async () => {
   expect(image.status).toBe(200);
   expect(image.headers.get("cache-control")).toBe("private, max-age=300");
 });
+
+it("protects blog source, downloads, backups and update endpoints from visitors and ordinary members", async () => {
+  const { base, auth, config } = await fixture();
+  const member = await memberCookie(auth, config);
+  for (const [cookie, expected] of [["", 401], [member, 403]] as const) {
+    const headers = cookie ? { Cookie: cookie } : undefined;
+    for (const path of ["", "/demo", "/demo/download", "/demo/download?version=previous", "/demo/images/a.png"]) {
+      expect((await fetch(`${base}/api/admin/content/blog${path}`, { headers })).status).toBe(expected);
+    }
+    expect((await fetch(`${base}/api/admin/content/blog/demo`, { method: "PUT", headers })).status).toBe(expected);
+  }
+  const preflight = await fetch(`${base}/api/admin/content/blog/demo`, { method: "OPTIONS", headers: { Origin: "http://localhost:3000", "Access-Control-Request-Method": "PUT", "Access-Control-Request-Headers": "X-CSRF-Token" } });
+  expect(preflight.headers.get("access-control-allow-methods")).toContain("PUT");
+});

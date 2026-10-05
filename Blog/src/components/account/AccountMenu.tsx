@@ -93,6 +93,7 @@ export default function AccountMenu({ site, compact = false }: { site: Site; com
           </div>
           {isAdmin && <div className="auth-workspace" aria-label="内容管理">
             <p className="auth-section-label">创作与管理</p>
+            {site === 'blog' && <a href={getUploadLinks(site)[0].href.replace('/upload', '/posts')} className="auth-action auth-action--destination" onClick={() => setOpen(false)}><Icon name="pen" /><span className="auth-action__copy"><span>管理博文</span><small>编辑、更新与下载</small></span><Icon name="arrow" className="auth-action__arrow" /></a>}
             {getUploadLinks(site).map((link) => <a key={link.target} href={link.href} className="auth-action auth-action--destination" onClick={() => setOpen(false)}>
               <Icon name={link.icon} /><span className="auth-action__copy"><span>{link.label}</span><small>{link.subtitle}</small></span><Icon name="arrow" className="auth-action__arrow" />
             </a>)}

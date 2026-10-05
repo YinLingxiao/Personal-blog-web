@@ -15,11 +15,29 @@ type PublishedItem = { id: string; sourceSlug?: string; category?: string };
 export class ContentPublisher {
   private readonly current = new Map<ContentTarget, string>();
   private readonly pending = new Map<ContentTarget, Promise<PublishedItem[]>>();
+  private readonly operations = new Map<ContentTarget, Promise<unknown>>();
 
   constructor(private readonly config: RuntimeConfig) {}
 
+  async exclusive<T>(target: ContentTarget, action: () => Promise<T>): Promise<T> {
+    const previous = this.operations.get(target);
+    const work = (async () => {
+      if (previous) await previous.catch(() => undefined);
+      return action();
+    })();
+    this.operations.set(target, work);
+    try { return await work; }
+    finally { if (this.operations.get(target) === work) this.operations.delete(target); }
+  }
+
   private targetRoot(target: ContentTarget) {
     return path.join(this.config.publishedContentRoot, target);
+  }
+
+  async publishedItems(target: ContentTarget): Promise<PublishedItem[]> {
+    const directory = await this.restore(target);
+    if (!directory) return [];
+    return JSON.parse(await fs.readFile(path.join(directory, "index.json"), "utf8")) as PublishedItem[];
   }
 
   private async restore(target: ContentTarget) {
@@ -42,7 +60,7 @@ export class ContentPublisher {
     if (existing) return existing;
     const running = this.pending.get(target);
     if (running) await running;
-    else await this.publish(target);
+    else await this.exclusive(target, () => this.publish(target));
     return this.current.get(target)!;
   }
 

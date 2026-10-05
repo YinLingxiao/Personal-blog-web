@@ -33,9 +33,11 @@ Blog/dist/
 Blog/src/generated/
 Blog/public/posts/
 Blog/public/latest.json
+Blog/public/rss.xml
 Note/dist/
 Note/src/generated/
 Note/public/posts/
+Note/public/rss.xml
 Site-api/data/
 Site-api/dist/
 *.sqlite

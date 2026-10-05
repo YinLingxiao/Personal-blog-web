@@ -1,3 +1,6 @@
+import { normalizeDisplayMath } from '../../shared/content/display-math.mjs';
+import { createHash } from 'node:crypto';
+import { parse } from 'yaml';
 import { readdirSync, readFileSync, writeFileSync, mkdirSync, existsSync, statSync, copyFileSync, rmSync } from 'node:fs';
 import { join, dirname, basename, extname, resolve, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -24,7 +27,7 @@ const ASSET_BASE = process.env.BLOG_ASSET_BASE || PROFILE.urlBase;
 const OUT_POSTS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'index.json') : resolve(ROOT, 'src/generated/posts.json');
 const OUT_PUBLIC_POSTS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'posts') : resolve(ROOT, 'public/posts');
 const OUT_LATEST = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'latest.json') : resolve(ROOT, 'public/latest.json');
-const OUT_RSS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'rss.xml') : resolve(ROOT, 'public/rss.xml');
+const OUT_RSS = RUNTIME_OUTPUT ? join(RUNTIME_OUTPUT, 'rss.xml') : null;
 
 function escapeXml(value) {
   return String(value)
@@ -83,46 +86,12 @@ ${entries.join('\n')}
 }
 
 function parseFrontmatter(raw) {
-  raw = raw.replace(/\r\n?/g, '\n'); // normalize CRLF/CR → LF (Obsidian on Windows often saves CRLF)
-  if (!raw.startsWith('---')) return { data: {}, body: raw };
-  const end = raw.indexOf('\n---', 3);
-  if (end === -1) return { data: {}, body: raw };
-  const yaml = raw.slice(3, end).trim();
-  const body = raw.slice(end + 4).replace(/^\n/, '');
-  const data = {};
-  const lines = yaml.split('\n');
-  const unquote = (s) => s.trim().replace(/^["']|["']$/g, '');
-  for (let i = 0; i < lines.length; i++) {
-    const m = lines[i].match(/^([A-Za-z_][\w-]*)\s*:\s*(.*)$/);
-    if (!m) continue;
-    let [, key, val] = m;
-    val = val.trim();
-    if (val === '') {
-      // Obsidian multi-line list:  key:\n  - a\n  - b
-      const items = [];
-      let j = i + 1;
-      while (j < lines.length && /^\s*-\s+/.test(lines[j])) {
-        items.push(unquote(lines[j].replace(/^\s*-\s+/, '')));
-        j++;
-      }
-      if (items.length) {
-        data[key] = items.filter(Boolean);
-        i = j - 1;
-      } else {
-        data[key] = '';
-      }
-    } else if (val.startsWith('[') && val.endsWith(']')) {
-      data[key] = val.slice(1, -1).split(',').map(unquote).filter(Boolean);
-    } else {
-      // 忽略 YAML 行内注释，并对布尔字面量做大小写无关识别，
-      // 这样 draft: true # 备注 和 draft: True 都能被正确识别。
-      const scalar = val.replace(/#.*$/, '').trim();
-      if (/^true$/i.test(scalar)) data[key] = true;
-      else if (/^false$/i.test(scalar)) data[key] = false;
-      else data[key] = unquote(val);
-    }
-  }
-  return { data, body };
+  raw = raw.replace(/\r\n?/g, '\n');
+  const match = /^---\n((?:[^\n]*\n)*?)---[ \t]*(?:\n|$)/.exec(raw);
+  if (!match) return { data: {}, body: raw };
+  const data = parse(match[1], { maxAliasCount: 50 }) || {};
+  if (typeof data !== 'object' || Array.isArray(data)) throw new Error('frontmatter must be a mapping');
+  return { data, body: raw.slice(match[0].length) };
 }
 
 function walkPosts() {
@@ -162,7 +131,7 @@ function scanDir(dir, folderCategory, out) {
 }
 
 function copyBundleImages(slug, bundleDir) {
-  if (!bundleDir) return;
+  if (!bundleDir || !RUNTIME_OUTPUT) return;
   const dest = join(OUT_PUBLIC_POSTS, slug);
   let copied = 0;
   for (const f of readdirSync(bundleDir)) {
@@ -197,36 +166,21 @@ function resolveCover(value, slug, bundleDir) {
     console.warn(`[build-notes] cover 文件不存在，已忽略: "${slug}" cover="${value}"`);
     return '';
   }
-  return `${ASSET_BASE}/posts/${encodeURIComponent(slug)}/${encodeURIComponent(file)}`;
+  return imageUrl(slug, file, bundleDir);
+}
+
+function imageUrl(slug, filename, bundleDir) {
+  const base = `${ASSET_BASE}/posts/${encodeURIComponent(slug)}/${encodeURIComponent(filename)}`;
+  const file = join(bundleDir, filename);
+  if (!existsSync(file) || !statSync(file).isFile()) return base;
+  const version = createHash('sha256').update(readFileSync(file)).digest('hex').slice(0, 16);
+  return `${base}?v=${version}`;
 }
 
 function rewriteImagePaths(body, slug, bundleDir) {
   if (!bundleDir) return body;
   // ![alt](./xxx.png) → ![alt](<urlBase>/posts/<slug>/xxx.png)  (urlBase: /blog for blog, '' for note)
-  return body.replace(/!\[([^\]]*)\]\(\.\/([^)]+)\)/g, (_m, alt, path) => `![${alt}](${ASSET_BASE}/posts/${encodeURIComponent(slug)}/${encodeURIComponent(path)})`);
-}
-
-/**
- * Obsidian renders any $$...$$ as display math, including multi-line blocks like
- *   $$0\le y\le 1,
- *   \qquad ... 2-y$$
- * but remark-math mis-parses that form (content sitting on the opening `$$` fence
- * line, no blank line before) — it orphans the closing `$$`, mispairs every later
- * `$$`, and KaTeX then renders the rest of the note as red error text.
- * Normalize every display block to the robust fenced-flow form:
- *   \n\n$$\n<inner>\n$$\n\n
- * Fenced + inline code are masked first so we never rewrite `$$` inside code.
- */
-function normalizeDisplayMath(body) {
-  const stash = [];
-  const protect = (s) => { stash.push(s); return `${stash.length - 1}`; };
-  let out = body
-    .replace(/```[\s\S]*?```|~~~[\s\S]*?~~~/g, protect) // fenced code
-    .replace(/`[^`\n]*`/g, protect);                    // inline code
-  out = out.replace(/\$\$([\s\S]*?)\$\$/g, (_m, inner) => `\n\n$$\n${inner.trim()}\n$$\n\n`);
-  out = out.replace(/\n{3,}/g, '\n\n');
-  out = out.replace(/(\d+)/g, (_m, i) => stash[Number(i)]);
-  return out.trim();
+  return body.replace(/!\[([^\]]*)\]\(\.\/([^)]+)\)/g, (_m, alt, path) => `![${alt}](${imageUrl(slug, path, bundleDir)})`);
 }
 
 /**
@@ -373,14 +327,16 @@ function build() {
     category: post.category,
     description: post.summary || plainExcerpt(post.content),
   }));
-  mkdirSync(dirname(OUT_RSS), { recursive: true });
-  writeFileSync(OUT_RSS, buildRss({
-    items: feedItems,
-    feed: PROFILE.feed,
-    urlBase: PROFILE.urlBase,
-    feedPath: RUNTIME_OUTPUT ? '/api/content/blog/rss.xml' : `${PROFILE.urlBase}/rss.xml`,
-  }), 'utf8');
-  console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
+  if (OUT_RSS) {
+    mkdirSync(dirname(OUT_RSS), { recursive: true });
+    writeFileSync(OUT_RSS, buildRss({
+      items: feedItems,
+      feed: PROFILE.feed,
+      urlBase: PROFILE.urlBase,
+      feedPath: '/api/content/blog/rss.xml',
+    }), 'utf8');
+    console.log(`[build-notes] wrote ${feedItems.length} items → ${relative(ROOT, OUT_RSS)}`);
+  }
 }
 
 build();
