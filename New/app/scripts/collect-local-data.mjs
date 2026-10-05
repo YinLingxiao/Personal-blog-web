@@ -25,6 +25,10 @@ function collectNotes() {
 
   const notes = JSON.parse(readFileSync(NOTES_SRC, 'utf8'));
   if (!Array.isArray(notes)) throw new Error('notes.json 不是数组');
+  if (!notes.length) {
+    console.warn('[collect-local-data] 没有读到任何笔记（缺少 Notes/ 内容库？），保留既有 notes-catalog.json');
+    return;
+  }
   writeFileSync(NOTES_CATALOG_OUT, `${JSON.stringify(buildNoteCatalog(notes), null, 2)}\n`);
 
   console.log(`[collect-local-data] wrote note catalog (${notes.length} notes) to public/notes-catalog.json`);
@@ -33,7 +37,12 @@ function collectNotes() {
 function collectBlogFallback() {
   const source = BLOG_CANDIDATES.find((candidate) => existsSync(candidate));
   if (!source) {
-    console.warn('[collect-local-data] Blog latest.json 缺失，跳过 blog-latest-fallback.json');
+    console.warn('[collect-local-data] Blog latest.json 缺失，跳过 writings-fallback.json');
+    return;
+  }
+  const latest = JSON.parse(readFileSync(source, 'utf8'));
+  if (!Array.isArray(latest) || !latest.length) {
+    console.warn('[collect-local-data] Blog latest.json 为空（缺少 Opus/posts 内容库？），保留既有 writings-fallback.json');
     return;
   }
   copyFileSync(source, BLOG_OUT);
