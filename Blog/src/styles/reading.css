@@ -29,7 +29,7 @@
   margin-top: var(--space-4);
   font-family: var(--font-serif);
   font-size: clamp(1.75rem, 1.15rem + 2.4vw, 2.5rem);
-  font-weight: 700;
+  font-weight: 400;
   line-height: 1.4;
   letter-spacing: 0.01em;
   color: var(--ink);
@@ -148,10 +148,10 @@
   overflow-wrap: anywhere;
 }
 
-.md-body h1 { margin: 2.2em 0 0.8em; font-size: 1.6em; font-weight: 700; line-height: 1.4; }
-.md-body h2 { margin: 2.2em 0 0.8em; font-size: 1.375em; font-weight: 700; line-height: 1.45; }
-.md-body h3 { margin: 1.9em 0 0.6em; font-size: 1.15em; font-weight: 600; line-height: 1.5; }
-.md-body :is(h4, h5, h6) { margin: 1.7em 0 0.5em; font-size: 1.05em; font-weight: 600; line-height: 1.5; }
+.md-body h1 { margin: 2.2em 0 0.8em; font-size: 1.6em; font-weight: 400; line-height: 1.4; }
+.md-body h2 { margin: 2.2em 0 0.8em; font-size: 1.375em; font-weight: 400; line-height: 1.45; }
+.md-body h3 { margin: 1.9em 0 0.6em; font-size: 1.15em; font-weight: 400; line-height: 1.5; }
+.md-body :is(h4, h5, h6) { margin: 1.7em 0 0.5em; font-size: 1.05em; font-weight: 400; line-height: 1.5; }
 
 .md-body p { margin: 0 0 1.1em; text-wrap: pretty; }
 .md-body :is(ul, ol) { margin: 0 0 1.1em; padding-left: 1.5em; }
@@ -273,7 +273,7 @@
 }
 
 @media (max-width: 767px) {
-  .md-body { font-size: var(--text-md); line-height: 1.85; }
+  .md-body { font-size: var(--text-read); line-height: 1.9; }
   .md-body h1 { font-size: 1.45em; }
   .md-body h2 { font-size: 1.3em; }
   .md-body li { line-height: 1.8; }

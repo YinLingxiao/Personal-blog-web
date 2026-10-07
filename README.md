@@ -72,7 +72,7 @@
 | 字标 | 手写 Moqian，SVG 轮廓 | 页眉、页脚 |
 | 书法 | Ma Shan Zheng（只含「墨」「浅」两字的子集） | 首屏大字 |
 | 展示 | Cormorant Garamond 斜体 | 栏目名 |
-| 正文 | Noto Serif SC | 标题、正文（行高 1.9） |
+| 正文 | 博客优先华文中宋，回退 Noto Serif SC；其余站点保持各自字体 | 中文标题与正文，博客正文行高 1.9 |
 | 文楷 | LXGW WenKai | 页脚标语、引文 |
 | 标记 | Space Grotesk，字距 0.12–0.22em | 日期、计数、序号 |
 
@@ -110,7 +110,7 @@
 - **画质分档**：桌面（宽度 ≥ 1024px 且为精细指针）启用完整效果；手机减少粒子数和分辨率；减少动效时全部静态，不加载 WebGL，笔记站背景改为纯色。
 - **光标**：精细指针设备上使用自定义十字光标，输入框保持文本光标。
 - **点击星座**：鼠标左键点击处出现一个星座（北斗、猎户、天蝎等 10 个，轮换出现），偶尔附带流星，或出现昴星团、牛郎织女彩蛋。三站共用；触屏、输入框和减少动效时不触发。
-- **星空背景**：主页和博客共用一层 Canvas 星空，帧率上限 30fps，页面隐藏时暂停。
+- **星空背景**：主页与博客阅读页共用 Canvas 星空；博客目录仅在顶栏保留星空，正文采用冷黑纯色背景。帧率上限 30fps，页面隐藏时暂停。
 - **读屏与键盘**：月与星河切换按钮带 `aria-pressed` 并有播报；Étude 每篇笔记只占一个 Tab 停点；笔记图谱提供可访问列表；焦点环可见；主要按钮触控区 44px。
 
 ### 品牌
@@ -130,14 +130,17 @@
 ### 博客 · Ballade
 
 <p>
-  <img src="docs/screenshots/blog-index.png" alt="Ballade：刊头、目录与最新一篇" width="100%">
+  <img src="docs/screenshots/blog-index.jpg" alt="Ballade：冷黑刊头、分类与左右主推文章" width="100%">
 </p>
 
-- **首页**：顶部是标题和统计（篇数、分类数、最近更新）；下面是搜索框和分类标签；最新一篇占一张宽卡片，其余文章两列排列。搜索或筛选时不单独突出最新一篇。
-- **文章页**：单栏，最宽 720px；支持 Markdown、表格、引用、KaTeX、`[[wiki link]]` 和可选封面；提供 RSS。
+- **目录**：参考 [Arena Blog](https://arena.ai/blog) 的开放排版，保留墨浅字标、冷黑底、双语署名和斜体 Ballade；主推文章采用左文右图，其余为三栏网格，手机为单栏。
+- **封面与交互**：16:9 封面配细灰边框，悬停或键盘聚焦展开“阅读全文”；文字直接排在页面上，缺少封面时使用文字占位。
+- **字体**：中文优先华文中宋，未安装时回退 Noto Serif SC 或系统宋体；英文展示与元信息保留独立字体。
+- **内容**：运行时读取 Site-api 的真实文章，支持 URL 分类筛选、全文搜索、Markdown、KaTeX 与双链。独立 Demo 路由 `/blog/demo/arena` 使用示例内容展示网格，不进入真实文章目录。
+- **阅读页**：保持单栏文档、可选封面、上一篇与下一篇；管理和发布流程保持原有行为。
 
 <p>
-  <img src="docs/screenshots/blog-article.png" alt="文章页：单栏阅读" width="100%">
+  <img src="docs/screenshots/blog-article.png" alt="博客阅读页：单栏正文" width="100%">
 </p>
 
 ### 笔记 · Étude
@@ -179,12 +182,12 @@
 
 ### 手机
 
-三个站点在手机上都改为单栏：首页首屏粒子在上、文字在下；博客统计移到标题下方；笔记侧栏变成抽屉，宽表格可横向滚动。
+三个站点在手机上都改为单栏：首页首屏粒子在上、文字在下；博客主推改为上图下文，文章网格改为单栏；笔记侧栏变成抽屉，宽表格可横向滚动。
 
 <table>
   <tr>
     <td width="33%"><img src="docs/screenshots/mobile-prelude.png" alt="手机上的首页首屏" width="100%"></td>
-    <td width="33%"><img src="docs/screenshots/mobile-blog.png" alt="手机上的博客" width="100%"></td>
+    <td width="33%"><img src="docs/screenshots/mobile-blog.jpg" alt="手机上的博客" width="100%"></td>
     <td width="33%"><img src="docs/screenshots/mobile-note.png" alt="手机上的笔记" width="100%"></td>
   </tr>
   <tr>

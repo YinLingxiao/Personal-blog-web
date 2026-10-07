@@ -1,6 +1,6 @@
 # Moqian Blog
 
-墨浅个人博客的独立前端项目，部署在 `moqian.me/blog/`。内容来自工作区同级的 `Opus/posts/`，构建时生成文章数据、图片资源与主页最新文章数据。
+墨浅个人博客的独立前端项目，部署在 `moqian.me/blog/`。正式页面在运行时读取 Site-api 发布的文章索引与配图；工作区同级的 `Opus/posts/` 用于本地内容整理和生成离线快照。
 
 博文内容仓库：[YinLingxiaoBlog](https://github.com/YinLingxiao/YinLingxiaoBlog)。本地 `Opus/posts/` 是该仓库的检出目录，构建从这里读取；尚未配置自动同步。
 
@@ -25,8 +25,10 @@ npm run preview
 
 - 扫描 `../Opus/posts/`；
 - 生成 `src/generated/posts.json`；
-- 将 page bundle 图片复制到 `public/posts/<slug>/`；
-- 生成 `public/latest.json`，供主页读取 `/blog/latest.json`。
+- 本地模式生成 `public/latest.json`，供个人主页构建离线快照，不复制配图、不生成 RSS；
+- Site-api 发布模式设置 `BLOG_OUTPUT_ROOT` / `BLOG_ASSET_BASE`，将索引、page bundle 配图、最新文章和 RSS 发布到 API 内容目录。
+
+正式博客读取 `/api/content/blog/index.json`，主页读取 `/api/content/blog/latest.json`，RSS 指向 `/api/content/blog/rss.xml`；API 域名来自 `VITE_AUTH_BASE_URL` 或默认配置。
 
 以上生成文件与 `dist/` 均不提交到仓库，`npm run generate`、`npm run dev`、`npm run check` 和 `npm run build` 会按需重建。
 
@@ -42,4 +44,16 @@ npm run preview
 
 本功能需同时部署新版 Site-api 与 Blog/dist；API 契约、备份目录和单实例运行要求见 [Site-api README](../Site-api/README.md)。Note 的上传与阅读流程保持原有行为。
 
-`npm run quality` 会依次执行 ESLint、TypeScript、Vitest 和生产构建。Blog 内部使用 `Post` 数据模型，公开文章路径与 `/blog/latest.json` 契约保持稳定。
+## Ballade 版式
+
+正式首页 `/blog/` 采用冷黑底 `#050505`、双语小署名与斜体 Ballade 刊头。布局参考 [Arena Blog](https://arena.ai/blog)：左右主推文章、开放三栏网格、16:9 封面、细灰边框与悬停阅读条；手机改为单栏。中文优先使用本机华文中宋，未安装时回退至 Noto Serif SC、思源宋体或系统宋体，仓库不分发华文中宋字体文件。
+
+- `src/components/BlogIndex.tsx`：正式首页与 Demo 共用的文章目录，保留 URL 分类参数、正文/标题/摘要/标签检索，以及加载、错误、空内容和无匹配状态。
+- `src/pages/editorial.css`：版式与交互；星空只保留在顶栏，目录使用原生指针，悬停和键盘聚焦均可展开阅读入口，尊重系统与本站的减少动态效果设置。
+- `src/pages/BlogHome.tsx`：正式入口，只读取 API 真实文章；未提供封面时显示文字占位。
+- `src/pages/ArenaDemo.tsx`、`arena-demo-data.ts`：独立预览 `/blog/demo/arena`，示例文章仅用于展示排版，不进入真实博客索引或主页最新文章。
+- `public/demo/arena/assets/`：预览使用的现有墨浅网站配图，来源与用途见该目录的 README。
+
+页面和字体更新需要重新构建并部署 `Blog/dist/`；发布一篇博文只需 Site-api 重新发布内容。文章地址仍为 `/blog/post/<slug>`，管理页、Markdown、KaTeX、双链、上一篇/下一篇与主页最新文章接口保持原有契约。
+
+`npm run quality` 会依次执行 ESLint、TypeScript、Vitest 和生产构建。
