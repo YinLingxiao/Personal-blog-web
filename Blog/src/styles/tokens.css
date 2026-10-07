@@ -25,18 +25,19 @@
   --danger-line: #74554e;
   --radius: 3px;
 
-  --font-brand: 'Great Vibes', 'Cormorant Garamond', cursive;
-  --font-display: 'Cormorant Garamond', 'Times New Roman', serif;
-  --font-sans: 'Space Grotesk', 'PingFang SC', 'Hiragino Sans GB', 'Microsoft YaHei UI', 'Microsoft YaHei', 'Noto Sans CJK SC', 'Source Han Sans SC', system-ui, sans-serif;
+  --font-cn: 'STZhongsong', '华文中宋', 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
+  --font-brand: 'Great Vibes', 'Cormorant Garamond', var(--font-cn);
+  --font-display: 'Cormorant Garamond', 'Times New Roman', var(--font-cn);
+  --font-sans: 'Space Grotesk', var(--font-cn);
   --font-ui: var(--font-sans);
-  --font-serif: 'Noto Serif SC', 'Source Han Serif SC', 'Songti SC', 'STSong', 'SimSun', serif;
-  --font-code: 'JetBrains Mono', 'SFMono-Regular', 'SF Mono', 'Cascadia Code', Consolas, 'Liberation Mono', 'Microsoft YaHei UI', monospace;
+  --font-serif: var(--font-cn);
+  --font-code: 'JetBrains Mono', 'SFMono-Regular', 'SF Mono', 'Cascadia Code', Consolas, 'Liberation Mono', var(--font-cn);
 
   --text-2xs: 0.6875rem;
-  --text-xs: 0.75rem;
+  --text-xs: 0.875rem;
   --text-sm: 0.875rem;
   --text-md: 1rem;
-  --text-read: 1.0625rem;
+  --text-read: 1.125rem;
   --text-lg: 1.125rem;
 
   --space-1: 4px;
